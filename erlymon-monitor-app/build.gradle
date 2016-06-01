@@ -83,14 +83,16 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    /*
     signingConfigs {
         release {
-            storeFile file('../../android.keystore')
+            storeFile file('../android.keystore')
             keyAlias 'erlymon-soft'
             storePassword ''
             keyPassword ''
         }
     }
+    */
 }
 
 dependencies {
@@ -142,7 +144,7 @@ repositories {
     maven { url "https://jitpack.io" }
     maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
 }
-
+/*
 task requestPasswords << {
     android.signingConfigs.release.storePassword = new String(System.console().readPassword('\nStore password: '))
     android.signingConfigs.release.keyPassword = new String(System.console().readPassword('Key password: '))
@@ -153,3 +155,4 @@ tasks.whenTaskAdded { theTask ->
         theTask.dependsOn 'requestPasswords'
     }
 }
+*/
