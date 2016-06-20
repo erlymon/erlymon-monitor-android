@@ -46,6 +46,7 @@ import org.erlymon.monitor.view.widget.DrawableClickListener
 import org.osmdroid.bonuspack.overlays.Polyline
 import org.osmdroid.util.BoundingBoxE6
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import java.util.*
 
 class PositionsActivity : BaseActivity<PositionsPresenter>(), PositionsView, DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
@@ -127,6 +128,7 @@ class PositionsActivity : BaseActivity<PositionsPresenter>(), PositionsView, Dat
 
         mapview.isTilesScaledToDpi = true
         mapview.setMultiTouchControls(true)
+        mapview.setLayerType(MapView.LAYER_TYPE_SOFTWARE, null)
 
         fab_load_positions.setOnClickListener{
             presenter?.onLoadPositionsButtonClick()
