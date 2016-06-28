@@ -73,7 +73,7 @@ class UsersFragment : BaseFragment() {
 
         lv_users.adapter = UsersAdapter(context, storage.getUsersSorted())
         lv_users.onItemClickListener = object : AdapterView.OnItemClickListener {
-            override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
                 val user = lv_users.getItemAtPosition(position) as User
                 val popupMenu = PopupMenu(context, view)
                 popupMenu.inflate(R.menu.fragment_users_popupmenu)

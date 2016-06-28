@@ -75,7 +75,7 @@ class DevicesFragment : BaseFragment() {
 
         lv_devices.adapter = DevicesAdapter(context, storage.devicesSorted)
         lv_devices.onItemClickListener = object : AdapterView.OnItemClickListener {
-            override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
                 val device = lv_devices.getItemAtPosition(position) as Device
                 val popupMenu = PopupMenu(context, view)
                 popupMenu.inflate(R.menu.fragment_devices_popupmenu)
