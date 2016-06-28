@@ -43,10 +43,10 @@ import org.erlymon.monitor.view.fragment.DatePickerDialogFragment
 import org.erlymon.monitor.view.fragment.TimePickerDialogFragment
 import org.erlymon.monitor.view.widget.DrawableClickListener
 
-import org.osmdroid.bonuspack.overlays.Polyline
 import org.osmdroid.util.BoundingBoxE6
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Polyline
 import java.util.*
 
 class PositionsActivity : BaseActivity<PositionsPresenter>(), PositionsView, DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {

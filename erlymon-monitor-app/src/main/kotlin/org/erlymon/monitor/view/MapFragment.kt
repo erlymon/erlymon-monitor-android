@@ -29,7 +29,6 @@ import android.view.ViewGroup
 import io.realm.RealmChangeListener
 
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
-import org.osmdroid.bonuspack.overlays.Marker
 import org.osmdroid.util.GeoPoint
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -38,6 +37,7 @@ import kotlinx.android.synthetic.main.fragment_map.*
 import org.erlymon.core.model.data.Device
 import org.erlymon.monitor.R
 import org.osmdroid.util.BoundingBoxE6
+import org.osmdroid.views.overlay.Marker
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
