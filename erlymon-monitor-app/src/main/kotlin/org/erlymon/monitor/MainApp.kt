@@ -19,6 +19,7 @@
 package org.erlymon.monitor
 
 import android.app.Application
+import android.support.multidex.MultiDexApplication
 import android.text.format.DateFormat
 import android.util.Log
 import ch.qos.logback.classic.Level
@@ -38,7 +39,7 @@ import java.util.*
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/17/16.
  */
-class MainApp : Application() {
+class MainApp : MultiDexApplication() {
     override fun onCreate() {
         super.onCreate()
         initLoggerSystem()

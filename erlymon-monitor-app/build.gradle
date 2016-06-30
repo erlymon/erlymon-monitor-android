@@ -72,6 +72,9 @@ android {
         versionCode getVersionCode()
         versionName getVersionName()
         //archivesBaseName = "erlymon-monitor-$versionName"
+
+        // Enabling multidex support.
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -101,6 +104,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.android.support:design:24.0.0'
 
+
+    compile 'com.android.support:multidex:1.0.1'
 
     // log
     compile 'org.slf4j:slf4j-api:1.7.12'
