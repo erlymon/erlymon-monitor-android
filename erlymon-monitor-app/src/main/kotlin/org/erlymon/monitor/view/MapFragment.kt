@@ -26,6 +26,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import io.realm.Realm
 import io.realm.RealmChangeListener
 
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
@@ -54,6 +55,13 @@ class MapFragment : BaseFragment() {
     private var mRadiusMarkerClusterer: DevicesMarkerClusterer? = null
     private var markers: MutableMap<Long, Marker> = HashMap()
 
+    private var listener: RealmChangeListener<Realm> = RealmChangeListener { realm ->
+        realm.where(Device::class.java).findAll().forEach { device ->
+            updateUnitMarker(device)
+        }
+        mRadiusMarkerClusterer?.invalidate()
+        mapview?.postInvalidate()
+    }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -115,17 +123,11 @@ class MapFragment : BaseFragment() {
         mRadiusMarkerClusterer?.setIcon(BitmapFactory.decodeResource(resources, R.drawable.marker_cluster))
         mapview.overlays.add(mRadiusMarkerClusterer)
 
-        storage.getDevices()?.addChangeListener{ res ->
-            res.forEach { device ->
-                updateUnitMarker(device)
-            }
-            mRadiusMarkerClusterer?.invalidate()
-            mapview?.postInvalidate()
-        }
+        storage.realm?.addChangeListener(listener)
     }
 
     override fun onPause() {
-        storage.getDevices()?.removeChangeListeners()
+        storage.realm?.removeChangeListener(listener)
         mapview.overlays.remove(mRadiusMarkerClusterer)
         markers.clear()
         super.onPause()
