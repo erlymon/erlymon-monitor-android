@@ -264,7 +264,7 @@ class MainActivity : BaseActivity<MainPresenter>(),
                 }
             REQUEST_CODE_UPDATE_ACCOUNT ->
                 if (resultCode == RESULT_OK) {
-                    val user = data?.getParcelableExtra<User>("session")
+                    val user = data?.getParcelableExtra<User>("user")
                     intent.putExtra("session", user)
                     storage?.createOrUpdateUser(user)
                     mAccountNameView?.text = user?.name
