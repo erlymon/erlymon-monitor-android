@@ -20,19 +20,26 @@ package org.erlymon.core.presenter;
 
 
 import android.content.Context;
-import android.support.v4.util.Pair;
 import android.util.Log;
 
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
+import org.erlymon.core.model.api.util.tuple.Triple;
+import org.erlymon.core.model.data.Device;
 import org.erlymon.core.model.data.Server;
 import org.erlymon.core.model.data.User;
 import org.erlymon.core.view.SignInView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
+import io.realm.Realm;
+import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
 /**
@@ -41,6 +48,7 @@ import rx.subscriptions.Subscriptions;
 public class SignInPresenterImpl implements SignInPresenter {
     private static final Logger logger = LoggerFactory.getLogger(SignInPresenterImpl.class);
     private Model model;
+    private Realm realmdb;
 
     private SignInView view;
     private Subscription subscription = Subscriptions.empty();
@@ -48,6 +56,7 @@ public class SignInPresenterImpl implements SignInPresenter {
     public SignInPresenterImpl(Context context, SignInView view) {
         this.view = view;
         this.model = new ModelImpl(context);
+        this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
@@ -57,6 +66,12 @@ public class SignInPresenterImpl implements SignInPresenter {
         }
 
         subscription = model.getServer()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(server -> realmdb.executeTransactionAsync(realm -> {
+                    realm.delete(Server.class);
+                    realm.copyToRealm(server);
+                }))
                 .subscribe(new Observer<Server>() {
                     @Override
                     public void onCompleted() {
@@ -83,7 +98,24 @@ public class SignInPresenterImpl implements SignInPresenter {
         }
 
         subscription = model.getSession()
-                .subscribe(new Observer<User>() {
+                .subscribeOn(Schedulers.io())
+                .flatMap(user -> {
+                    if (user.getAdmin()) {
+                        return Observable.zip(model.getDevices(), model.getUsers(), (devices, users) -> new Triple<>(user, devices, users)).asObservable();
+                    } else {
+                        return model.getDevices().flatMap(devices -> {
+                            User[] users = new User[] { user };
+                            return Observable.just(new Triple<>(user, devices, users));
+                        });
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(triple -> realmdb.executeTransactionAsync(realm -> {
+                    realm.copyToRealmOrUpdate(triple.first);
+                    realm.copyToRealmOrUpdate(Arrays.asList(triple.second));
+                    realm.copyToRealmOrUpdate(Arrays.asList(triple.third));
+                }))
+                .subscribe(new Observer<Triple<User, Device[], User[]>>() {
                     @Override
                     public void onCompleted() {
 
@@ -96,21 +128,38 @@ public class SignInPresenterImpl implements SignInPresenter {
                     }
 
                     @Override
-                    public void onNext(User data) {
-                        view.showSession(data);
+                    public void onNext(Triple<User, Device[], User[]> data) {
+                        view.showSession(data.first);
                     }
                 });
     }
 
     @Override
-    public void onSignInButtonClick() {
+    public void onCreateSession() {
 
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
         }
 
         subscription = model.createSession(view.getEmail(), view.getPassword())
-                .subscribe(new Observer<User>() {
+                .subscribeOn(Schedulers.io())
+                .flatMap(user -> {
+                    if (user.getAdmin()) {
+                        return Observable.zip(model.getDevices(), model.getUsers(), (devices, users) -> new Triple<>(user, devices, users)).asObservable();
+                    } else {
+                        return model.getDevices().flatMap(devices -> {
+                            User[] users = new User[] { user };
+                            return Observable.just(new Triple<>(user, devices, users));
+                        });
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(triple -> realmdb.executeTransactionAsync(realm -> {
+                    realm.copyToRealmOrUpdate(triple.first);
+                    realm.copyToRealmOrUpdate(Arrays.asList(triple.second));
+                    realm.copyToRealmOrUpdate(Arrays.asList(triple.third));
+                }))
+                .subscribe(new Observer<Triple<User, Device[], User[]>>() {
                     @Override
                     public void onCompleted() {
 
@@ -123,8 +172,8 @@ public class SignInPresenterImpl implements SignInPresenter {
                     }
 
                     @Override
-                    public void onNext(User data) {
-                        view.showData(data);
+                    public void onNext(Triple<User, Device[], User[]> data) {
+                        view.showSession(data.first);
                     }
                 });
     }
@@ -133,6 +182,10 @@ public class SignInPresenterImpl implements SignInPresenter {
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
+        }
+
+        if (!realmdb.isClosed()) {
+            realmdb.close();
         }
     }
 }

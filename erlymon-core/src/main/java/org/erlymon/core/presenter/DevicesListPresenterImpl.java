@@ -24,49 +24,45 @@ import android.util.Log;
 
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
-import org.erlymon.core.model.data.Server;
-import org.erlymon.core.view.ServerView;
+import org.erlymon.core.model.data.Device;
+import org.erlymon.core.view.DevicesListView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
-public class ServerPresenterImpl implements ServerPresenter {
-    private static final Logger logger = LoggerFactory.getLogger(ServerPresenterImpl.class);
+public class DevicesListPresenterImpl implements DevicesListPresenter {
+    private static final Logger logger = LoggerFactory.getLogger(DevicesListPresenterImpl.class);
     private Model model;
     private Realm realmdb;
 
-    private ServerView view;
+    private DevicesListView view;
     private Subscription subscription = Subscriptions.empty();
 
-    public ServerPresenterImpl(Context context, ServerView view) {
+    public DevicesListPresenterImpl(Context context, DevicesListView view) {
         this.view = view;
         this.model = new ModelImpl(context);
         this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
-    public void onSaveButtonClick() {
-
+    public void onLoadDevicesCache() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
         }
 
-        subscription = model.updateServer(view.getServer())
-                .subscribeOn(Schedulers.io())
+        subscription = realmdb.where(Device.class).findAllSortedAsync("name").asObservable()
+                .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(server -> realmdb.executeTransactionAsync(realm -> {
-                    realm.copyToRealmOrUpdate(server);
-                }))
-                .subscribe(new Observer<Server>() {
+                .subscribe(new Observer<RealmResults<Device>>() {
                     @Override
                     public void onCompleted() {
 
@@ -79,7 +75,8 @@ public class ServerPresenterImpl implements ServerPresenter {
                     }
 
                     @Override
-                    public void onNext(Server data) {
+                    public void onNext(RealmResults<Device> data) {
+                        logger.debug(data.toString());
                         view.showData(data);
                     }
                 });

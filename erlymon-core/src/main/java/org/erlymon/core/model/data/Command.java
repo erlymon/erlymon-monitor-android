@@ -22,6 +22,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Since;
 
 import java.util.Map;
 
@@ -31,10 +32,20 @@ import java.util.Map;
 public class Command implements Parcelable {
     @Expose
     private Long id;
+
+    @Since(3.1)
     @Expose
     private Long deviceId;
+
+    @Since(3.1)
     @Expose
     private String type;
+
+    @Since(3.1)
+    @Expose
+    private Map<String, Object> other;
+
+    @Since(3.2)
     @Expose
     private Map<String, Object> attributes;
 
@@ -70,6 +81,14 @@ public class Command implements Parcelable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Map<String, Object> getOther() {
+        return other;
+    }
+
+    public void setOther(Map<String, Object> other) {
+        this.other = other;
     }
 
     public Map<String, Object> getAttributes() {

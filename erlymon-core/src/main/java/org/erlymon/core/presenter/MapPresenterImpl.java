@@ -22,14 +22,21 @@ package org.erlymon.core.presenter;
 import android.content.Context;
 import android.util.Log;
 
+import com.appunite.websocket.rx.object.messages.RxObjectEventMessage;
+
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
-import org.erlymon.core.model.data.Server;
-import org.erlymon.core.view.ServerView;
+import org.erlymon.core.model.api.util.MoreObservables;
+import org.erlymon.core.model.data.Device;
+import org.erlymon.core.model.data.Event;
+import org.erlymon.core.view.MapView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 import io.realm.Realm;
+import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -39,34 +46,48 @@ import rx.subscriptions.Subscriptions;
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
-public class ServerPresenterImpl implements ServerPresenter {
-    private static final Logger logger = LoggerFactory.getLogger(ServerPresenterImpl.class);
+public class MapPresenterImpl implements MapPresenter {
+    private static final Logger logger = LoggerFactory.getLogger(MapPresenterImpl.class);
     private Model model;
     private Realm realmdb;
 
-    private ServerView view;
+    private MapView view;
     private Subscription subscription = Subscriptions.empty();
 
-    public ServerPresenterImpl(Context context, ServerView view) {
+    public MapPresenterImpl(Context context, MapView view) {
         this.view = view;
         this.model = new ModelImpl(context);
         this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
-    public void onSaveButtonClick() {
-
+    public void onOpenWebSocket() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
         }
 
-        subscription = model.updateServer(view.getServer())
+        subscription = model.openWebSocket()
                 .subscribeOn(Schedulers.io())
+                .compose(MoreObservables.filterAndMap(RxObjectEventMessage.class))
+                .compose(RxObjectEventMessage.filterAndMap(Event.class))
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(server -> realmdb.executeTransactionAsync(realm -> {
-                    realm.copyToRealmOrUpdate(server);
+                .doOnNext(event -> realmdb.executeTransactionAsync(realm -> {
+                    if (event.getPositions() != null) {
+                        realm.copyToRealmOrUpdate(Arrays.asList(event.getPositions()));
+                    }
+                    if (event.getDevices() != null) {
+                        realm.copyToRealmOrUpdate(Arrays.asList(event.getDevices()));
+                    }
                 }))
-                .subscribe(new Observer<Server>() {
+                .flatMap(event -> {
+                    if (event.getDevices() == null && event.getPositions() != null) {
+                        return realmdb.where(Device.class).findAllAsync().asObservable()
+                                .flatMap(devices -> Observable.just(new Event(devices.toArray(new Device[devices.size()]), event.getPositions())));
+                    } else {
+                        return Observable.just(event);
+                    }
+                })
+                .subscribe(new Observer<Event>() {
                     @Override
                     public void onCompleted() {
 
@@ -79,8 +100,9 @@ public class ServerPresenterImpl implements ServerPresenter {
                     }
 
                     @Override
-                    public void onNext(Server data) {
-                        view.showData(data);
+                    public void onNext(Event event) {
+                        logger.debug("Event: " + event);
+                        view.showEvent(event);
                     }
                 });
     }

@@ -29,4 +29,5 @@ object MainPref : KotprefModel() {
 
     var dns: String by stringPrefVar(default = "web.erlymon.org")
     var sslOrTls: Boolean by booleanPrefVar(default = false)
+    var protocolVersion: Float by floatPrefVar(default = 3.4F)
 }

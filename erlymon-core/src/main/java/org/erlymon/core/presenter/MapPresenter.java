@@ -21,10 +21,6 @@ package org.erlymon.core.presenter;
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
-public interface MainPresenter extends Presenter {
-    void onDeleteSessionButtonClick();
-    void onDeleteDeviceButtonClick();
-    void onDeleteUserButtonClick();
-    void onSendCommandButtonClick();
-    void onGetPostionByCache();
+public interface MapPresenter extends Presenter {
+    void onOpenWebSocket();
 }

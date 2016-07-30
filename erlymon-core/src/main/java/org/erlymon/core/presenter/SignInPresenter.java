@@ -24,5 +24,5 @@ package org.erlymon.core.presenter;
 public interface SignInPresenter extends Presenter {
     void onGetServer();
     void onGetSession();
-    void onSignInButtonClick();
+    void onCreateSession();
 }

@@ -21,6 +21,7 @@ package org.erlymon.core.model;
 import android.content.Context;
 
 import com.appunite.websocket.rx.messages.RxEvent;
+import com.appunite.websocket.rx.object.messages.RxObjectEvent;
 
 import org.erlymon.core.model.api.ApiModule;
 import org.erlymon.core.model.api.util.QueryDate;
@@ -48,107 +49,77 @@ public class ModelImpl implements Model {
 
     @Override
     public Observable<Server> getServer() {
-        return apiModule.getApi().getServer()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().getServer();
     }
 
     @Override
     public Observable<Server> updateServer(Server server) {
-        return apiModule.getApi().updateServer(server)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().updateServer(server);
     }
 
     @Override
     public Observable<User> getSession() {
-        return apiModule.getApi().getSession()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().getSession();
     }
 
     @Override
     public Observable<User> createSession(String email, String password) {
-        return apiModule.getApi().createSession(email, password)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().createSession(email, password);
     }
 
     @Override
     public Observable<Void> deleteSession() {
-        return apiModule.getApi().deleteSession()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().deleteSession();
     }
 
     @Override
     public Observable<User[]> getUsers() {
-        return apiModule.getApi().getUsers()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().getUsers();
     }
 
     @Override
     public Observable<User> createUser(User user) {
-        return apiModule.getApi().createUser(user)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().createUser(user);
     }
 
     @Override
     public Observable<User> updateUser(long id, User user) {
-        return apiModule.getApi().updateUser(id, user)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().updateUser(id, user);
     }
 
     @Override
     public Observable<Void> deleteUser(long id) {
-        return apiModule.getApi().deleteUser(id)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().deleteUser(id);
     }
 
     @Override
     public Observable<Device[]> getDevices() {
-        return apiModule.getApi().getDevices()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().getDevices();
     }
 
     @Override
     public Observable<Device[]> getDevices(boolean all) {
-        return apiModule.getApi().getDevices(all)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().getDevices(all);
     }
 
     @Override
     public Observable<Device[]> getDevices(long userId) {
-        return apiModule.getApi().getDevices(userId)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().getDevices(userId);
     }
 
     @Override
     public Observable<Device> createDevice(Device device) {
-        return apiModule.getApi().createDevice(device)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().createDevice(device);
     }
 
     @Override
     public Observable<Device> updateDevice(long id, Device device) {
-        return apiModule.getApi().updateDevice(id, device)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().updateDevice(id, device);
     }
 
     @Override
     public Observable<Void> deleteDevice(long id) {
-        return apiModule.getApi().deleteDevice(id)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().deleteDevice(id);
     }
 
     @Override
@@ -160,30 +131,22 @@ public class ModelImpl implements Model {
 
     @Override
     public Observable<Void> createCommand(Command command) {
-        return apiModule.getApi().createCommand(command)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().createCommand(command);
     }
 
     @Override
-    public Observable<RxEvent> openWebSocket() {
+    public Observable<RxObjectEvent> openWebSocket() {
         return apiModule.createWebSocket()
-                .webSocketObservable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+                .webSocketObservable();
     }
 
     @Override
     public Observable<Void> createPermission(Permission permission) {
-        return apiModule.getApi().createPermission(permission)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().createPermission(permission);
     }
 
     @Override
     public Observable<Void> deletePermission(Permission permission) {
-        return apiModule.getApi().deletePermission(permission)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return apiModule.getApi().deletePermission(permission);
     }
 }

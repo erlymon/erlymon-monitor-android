@@ -26,17 +26,21 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import io.realm.RealmResults
 import org.slf4j.LoggerFactory
 
 import kotlinx.android.synthetic.main.fragment_users.*
 import org.erlymon.core.model.data.User
+import org.erlymon.core.presenter.UsersListPresenter
+import org.erlymon.core.presenter.UsersListPresenterImpl
+import org.erlymon.core.view.UsersListView
 import org.erlymon.monitor.R
 import org.erlymon.monitor.view.adapter.UsersAdapter
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
  */
-class UsersFragment : BaseFragment() {
+class UsersFragment : BaseFragment<UsersListPresenter>(), UsersListView {
 
     interface OnActionUserListener {
         fun onEditUser(user: User)
@@ -71,7 +75,8 @@ class UsersFragment : BaseFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        lv_users.adapter = UsersAdapter(context, storage.getUsersSorted())
+        presenter = UsersListPresenterImpl(context, this)
+        //lv_users.adapter = UsersAdapter(context, storage.getUsersSorted())
         lv_users.onItemClickListener = object : AdapterView.OnItemClickListener {
             override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
                 val user = lv_users.getItemAtPosition(position) as User
@@ -81,6 +86,19 @@ class UsersFragment : BaseFragment() {
                 popupMenu.show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        presenter?.onLoadUsersCache()
+    }
+
+    override fun showData(data: RealmResults<User>) {
+        lv_users.adapter = UsersAdapter(context, data)
+    }
+
+    override fun showError(error: String) {
+       makeToast(lv_users, error)
     }
 
     private inner class OnExecPopupMenuItem(internal var user: User) : PopupMenu.OnMenuItemClickListener {

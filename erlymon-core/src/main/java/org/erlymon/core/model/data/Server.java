@@ -23,6 +23,7 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -37,45 +38,62 @@ public class Server extends RealmObject implements Parcelable {
     @Expose
     private long id;
 
+    @Since(3.0)
     @SerializedName("registration")
     @Expose
     private Boolean registration;
 
-    @SerializedName("readonly")
-    @Expose
-    private Boolean readonly;
-
-    @SerializedName("map")
-    @Expose
-    private String map;
-
-    @SerializedName("bingKey")
-    @Expose
-    private String bingKey;
-    @SerializedName("mapUrl")
-    @Expose
-    private String mapUrl;
-
-    @SerializedName("distanceUnit")
-    @Expose
-    private String distanceUnit;
-
-    @SerializedName("speedUnit")
-    @Expose
-    private String speedUnit;
-
+    @Since(3.0)
     @SerializedName("latitude")
     @Expose
     private Double latitude;
 
+    @Since(3.0)
     @SerializedName("longitude")
     @Expose
     private Double longitude;
 
+    @Since(3.0)
     @SerializedName("zoom")
     @Expose
     private Integer zoom;
 
+    @Since(3.1)
+    @SerializedName("map")
+    @Expose
+    private String map;
+
+    @Since(3.1)
+    @SerializedName("language")
+    @Expose
+    private String language;
+
+    @Since(3.1)
+    @SerializedName("distanceUnit")
+    @Expose
+    private String distanceUnit;
+
+    @Since(3.1)
+    @SerializedName("speedUnit")
+    @Expose
+    private String speedUnit;
+
+    @Since(3.2)
+    @SerializedName("bingKey")
+    @Expose
+    private String bingKey;
+
+    @Since(3.2)
+    @SerializedName("mapUrl")
+    @Expose
+    private String mapUrl;
+
+    @Since(3.4)
+    @SerializedName("readonly")
+    @Expose
+    private Boolean readonly;
+
+    @Since(3.5)
     @SerializedName("twelveHourFormat")
     @Expose
     private Boolean twelveHourFormat;
@@ -135,6 +153,20 @@ public class Server extends RealmObject implements Parcelable {
      */
     public void setMap(String map) {
         this.map = map;
+    }
+
+    /**
+     * @return The language
+     */
+    public String getLanguage() {
+        return language;
+    }
+
+    /**
+     * @param language The map
+     */
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     /**
@@ -256,6 +288,7 @@ public class Server extends RealmObject implements Parcelable {
         byte readonlyVal = in.readByte();
         readonly = readonlyVal == 0x02 ? null : readonlyVal != 0x00;
         map = in.readString();
+        language = in.readString();
         bingKey = in.readString();
         mapUrl = in.readString();
         distanceUnit = in.readString();
@@ -286,6 +319,7 @@ public class Server extends RealmObject implements Parcelable {
             dest.writeByte((byte) (readonly ? 0x01 : 0x00));
         }
         dest.writeString(map);
+        dest.writeString(language);
         dest.writeString(bingKey);
         dest.writeString(mapUrl);
         dest.writeString(distanceUnit);

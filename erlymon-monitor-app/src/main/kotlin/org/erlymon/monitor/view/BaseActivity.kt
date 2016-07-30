@@ -22,32 +22,24 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.View
-import org.erlymon.core.model.data.Storage
 import org.erlymon.core.presenter.Presenter
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/12/16.
  */
-open class BaseActivity<P : Presenter> : AppCompatActivity(), BaseFragment.ServiceInterface {
-    override var storage: Storage? = null
+open class BaseActivity<P : Presenter> : AppCompatActivity() {
     protected var presenter: P? = null
 
     override fun onCreate(savedInstanceState :Bundle?) {
         super.onCreate(savedInstanceState)
-        storage = Storage(this@BaseActivity, "erlymon-monitor-storage.realm")
-        storage?.open()
     }
 
-    override fun onStop() {
-        super.onStop()
+
+    override fun onDestroy() {
+        super.onDestroy()
         if (presenter != null) {
             presenter!!.onStop()
         }
-    }
-
-    override fun onDestroy() {
-        storage?.close()
-        super.onDestroy()
     }
 
     protected fun makeToast(view: View, text: String) {

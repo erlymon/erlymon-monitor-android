@@ -28,6 +28,7 @@ import android.view.View
 import android.view.ViewGroup
 import io.realm.Realm
 import io.realm.RealmChangeListener
+import io.realm.RealmResults
 
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.util.GeoPoint
@@ -36,6 +37,12 @@ import java.util.*
 
 import kotlinx.android.synthetic.main.fragment_map.*
 import org.erlymon.core.model.data.Device
+import org.erlymon.core.model.data.Event
+import org.erlymon.core.model.data.Position
+import org.erlymon.core.presenter.MapPresenter
+import org.erlymon.core.presenter.MapPresenterImpl
+import org.erlymon.core.presenter.UsersListPresenterImpl
+import org.erlymon.core.view.MapView
 import org.erlymon.monitor.R
 import org.osmdroid.util.BoundingBoxE6
 import org.osmdroid.views.overlay.Marker
@@ -43,7 +50,7 @@ import org.osmdroid.views.overlay.Marker
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
  */
-class MapFragment : BaseFragment() {
+class MapFragment : BaseFragment<MapPresenter>(), MapView {
 
     private inner class DevicesMarkerClusterer(ctx: Context) : RadiusMarkerClusterer(ctx) {
 
@@ -54,14 +61,6 @@ class MapFragment : BaseFragment() {
 
     private var mRadiusMarkerClusterer: DevicesMarkerClusterer? = null
     private var markers: MutableMap<Long, Marker> = HashMap()
-
-    private var listener: RealmChangeListener<Realm> = RealmChangeListener { realm ->
-        realm.where(Device::class.java).findAll().forEach { device ->
-            updateUnitMarker(device)
-        }
-        mRadiusMarkerClusterer?.invalidate()
-        mapview?.postInvalidate()
-    }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -74,60 +73,25 @@ class MapFragment : BaseFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        presenter = MapPresenterImpl(context, this)
+
         arrowDrawable = resources.getDrawable(R.drawable.ic_arrow)
 
         mapview.isTilesScaledToDpi = true
         mapview.setMultiTouchControls(true)
-
-        mapview.postDelayed({
-            try {
-                val user = storage.firstUser
-
-                if (user.latitude === 0.0 && user.longitude === 0.0 && user.zoom === 0) {
-                    val server = storage.firstServer
-                    if (server.latitude === 0.0 && server.longitude === 0.0 && server.zoom === 0) {
-                        animateTo(GeoPoint(server.latitude!!, server.longitude!!), server.zoom!!)
-                    }
-                } else {
-                    animateTo(GeoPoint(user.latitude, user.longitude), user.zoom)
-                }
-            } catch (ignore: NullPointerException) {
-                //logger.warn(Log.getStackTraceString(e))
-            }
-            mapview.postInvalidate()
-        }, 1000)
     }
 
     override fun onResume() {
         super.onResume()
 
-        mapview.postDelayed({
-            try {
-                val user = storage.firstUser
-
-                if (user.latitude === 0.0 && user.longitude === 0.0 && user.zoom === 0) {
-                    val server = storage.firstServer
-                    if (server.latitude === 0.0 && server.longitude === 0.0 && server.zoom === 0) {
-                        animateTo(GeoPoint(server.latitude!!, server.longitude!!), server.zoom!!)
-                    }
-                } else {
-                    animateTo(GeoPoint(user.latitude, user.longitude), user.zoom)
-                }
-            } catch (ignore: NullPointerException) {
-                //logger.warn(Log.getStackTraceString(e))
-            }
-            mapview.postInvalidate()
-        }, 1000)
-
         mRadiusMarkerClusterer = DevicesMarkerClusterer(context)
         mRadiusMarkerClusterer?.setIcon(BitmapFactory.decodeResource(resources, R.drawable.marker_cluster))
         mapview.overlays.add(mRadiusMarkerClusterer)
 
-        storage.realm?.addChangeListener(listener)
+        presenter?.onOpenWebSocket()
     }
 
     override fun onPause() {
-        storage.realm?.removeChangeListener(listener)
         mapview.overlays.remove(mRadiusMarkerClusterer)
         markers.clear()
         super.onPause()
@@ -139,49 +103,45 @@ class MapFragment : BaseFragment() {
         mapview.postInvalidate()
     }
 
-    fun zoomToBoundingBox(boundingBoxE6: BoundingBoxE6) {
-        mapview.zoomToBoundingBox(boundingBoxE6)
-        mapview.postInvalidate()
-    }
-
-    private fun removeUnitMarker(device: Device) {
-        try {
-            logger.debug("REMOVE MARKER: " + device)
-            val marker = markers[device.id]
-            logger.debug("REMOVE MARKER: " + marker)
-            mRadiusMarkerClusterer?.remove(marker as Marker)
-            markers.remove(device.id)
-            marker?.remove(mapview)
-        } catch (e: NullPointerException) {
-            logger.warn(Log.getStackTraceString(e))
-        }
-
-    }
-
-    private fun updateUnitMarker(device: Device) {
+    fun updateUnitMarker(device: Device, position: Position) {
         try {
             logger.debug("UPDATE MARKER: " + device)
-            val position = storage.getPositionById(device.positionId)
-            if (position != null) {
-                var marker: Marker? = markers[device.id]
-                if (marker == null) {
-                    marker = Marker(mapview)
-                    mRadiusMarkerClusterer?.add(marker)
-                    markers.put(device.id, marker)
+            var marker: Marker? = markers[device.id]
+            if (marker == null) {
+                marker = Marker(mapview)
+                mRadiusMarkerClusterer?.add(marker)
+                markers.put(device.id, marker)
 
-                }
-                marker.title = device.name
-                marker.snippet = position.fixTime.toString()
-
-                marker.setIcon(arrowDrawable)
-                if (position.course != null) {
-                    marker.rotation = position.course
-                }
-                marker.position = GeoPoint(position.latitude, position.longitude)
             }
+            marker.title = device.name
+            marker.snippet = position.fixTime.toString()
+
+            marker.setIcon(arrowDrawable)
+            if (position.course != null) {
+                marker.rotation = position.course
+            }
+            marker.position = GeoPoint(position.latitude, position.longitude)
         } catch (e: Exception) {
             logger.warn(Log.getStackTraceString(e))
         }
+    }
+
+    override fun showEvent(event: Event) {
+        event.devices?.forEach { device ->
+            event.positions?.forEach { position ->
+                if (device.id == position.deviceId) {
+                    updateUnitMarker(device, position)
+                }
+            }
+        }
+
+        mRadiusMarkerClusterer?.invalidate()
+        mapview?.postInvalidate()
+    }
+
+    override fun showError(error: String) {
+        //makeToast(mapview, error)
+        presenter?.onOpenWebSocket()
     }
 
     companion object {

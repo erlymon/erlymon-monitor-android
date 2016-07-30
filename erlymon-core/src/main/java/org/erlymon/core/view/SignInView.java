@@ -28,7 +28,7 @@ import org.erlymon.core.model.data.User;
 public interface SignInView extends View {
     void showServer(Server server);
     void showSession(User user);
-    void showData(User user);
+
     String getEmail();
     String getPassword();
 }

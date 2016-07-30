@@ -22,19 +22,21 @@ package org.erlymon.core.view;
 import org.erlymon.core.model.data.Command;
 import org.erlymon.core.model.data.Device;
 import org.erlymon.core.model.data.Event;
+import org.erlymon.core.model.data.Position;
 import org.erlymon.core.model.data.User;
+
+import io.realm.RealmResults;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
 public interface MainView extends View {
-    void showDevices(Device[] devices);
-    void showUsers(User[] users);
-    void showEvent(Event event);
+    void showPosition(Position position);
     void showCompleted();
     void showRemoveDeviceCompleted();
     void showRemoveUserCompleted();
     long getDeviceId();
+    long getPositionId();
     long getUserId();
     Command getCommand();
 }

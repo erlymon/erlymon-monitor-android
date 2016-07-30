@@ -25,6 +25,12 @@ public class Event {
     private Device[] devices;
     private Position[] positions;
 
+    public Event() {}
+
+    public Event(Device[] devices, Position[] positions) {
+        this.devices = devices;
+        this.positions = positions;
+    }
     public Device[] getDevices() {
         return devices;
     }

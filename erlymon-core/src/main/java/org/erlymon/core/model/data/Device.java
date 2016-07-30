@@ -21,6 +21,10 @@ package org.erlymon.core.model.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
+
 import java.util.Date;
 
 import io.realm.RealmObject;
@@ -32,11 +36,36 @@ import io.realm.annotations.PrimaryKey;
 public class Device extends RealmObject implements Parcelable {
     @PrimaryKey
     private Long id;
+
+    @Since(3.0)
+    @SerializedName("name")
+    @Expose
     private String name;
+
+    @Since(3.0)
+    @SerializedName("uniqueId")
+    @Expose
     private String uniqueId;
+
+    @Since(3.3)
+    @SerializedName("status")
+    @Expose
     private String status;
+
+    @Since(3.3)
+    @SerializedName("lastUpdate")
+    @Expose
     private Date lastUpdate;
+
+
+    @Since(3.4)
+    @SerializedName("positionId")
+    @Expose
     private Long positionId;
+
+    @Since(3.4)
+    @SerializedName("dataId")
+    @Expose
     private Long dataId;
 
     public Device() {}

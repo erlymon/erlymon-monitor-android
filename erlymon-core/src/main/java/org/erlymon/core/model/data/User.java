@@ -23,6 +23,7 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -35,42 +36,71 @@ public class User extends RealmObject implements Parcelable {
     @SerializedName("id")
     @Expose
     private long id;
+
+    @Since(3.0)
     @SerializedName("name")
     @Expose
     private String name;
+
+    @Since(3.0)
     @SerializedName("email")
     @Expose
     private String email;
-    @SerializedName("readonly")
-    @Expose
-    private Boolean readonly;
-    @SerializedName("admin")
-    @Expose
-    private Boolean admin;
-    @SerializedName("map")
-    @Expose
-    private String map;
-    @SerializedName("distanceUnit")
-    @Expose
-    private String distanceUnit;
-    @SerializedName("speedUnit")
-    @Expose
-    private String speedUnit;
-    @SerializedName("latitude")
-    @Expose
-    private Double latitude;
-    @SerializedName("longitude")
-    @Expose
-    private Double longitude;
-    @SerializedName("zoom")
-    @Expose
-    private Integer zoom;
-    @SerializedName("twelveHourFormat")
-    @Expose
-    private Boolean twelveHourFormat;
+
+    @Since(3.0)
     @SerializedName("password")
     @Expose
     private String password;
+
+    @Since(3.0)
+    @SerializedName("admin")
+    @Expose
+    private Boolean admin;
+
+    @Since(3.1)
+    @SerializedName("map")
+    @Expose
+    private String map;
+
+    @Since(3.1)
+    @SerializedName("language")
+    @Expose
+    private String language;
+
+    @Since(3.1)
+    @SerializedName("distanceUnit")
+    @Expose
+    private String distanceUnit;
+
+    @Since(3.1)
+    @SerializedName("speedUnit")
+    @Expose
+    private String speedUnit;
+
+    @Since(3.1)
+    @SerializedName("latitude")
+    @Expose
+    private Double latitude;
+
+    @Since(3.1)
+    @SerializedName("longitude")
+    @Expose
+    private Double longitude;
+
+    @Since(3.1)
+    @SerializedName("zoom")
+    @Expose
+    private Integer zoom;
+
+    @Since(3.4)
+    @SerializedName("readonly")
+    @Expose
+    private Boolean readonly;
+
+    @Since(3.5)
+    @SerializedName("twelveHourFormat")
+    @Expose
+    private Boolean twelveHourFormat;
 
     public User() {}
     /**
@@ -179,6 +209,14 @@ public class User extends RealmObject implements Parcelable {
      */
     public void setMap(String map) {
         this.map = map;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     /**
@@ -316,6 +354,7 @@ public class User extends RealmObject implements Parcelable {
         byte adminVal = in.readByte();
         admin = adminVal == 0x02 ? null : adminVal != 0x00;
         map = in.readString();
+        language = in.readString();
         distanceUnit = in.readString();
         speedUnit = in.readString();
         latitude = in.readByte() == 0x00 ? null : in.readDouble();
@@ -347,6 +386,7 @@ public class User extends RealmObject implements Parcelable {
             dest.writeByte((byte) (admin ? 0x01 : 0x00));
         }
         dest.writeString(map);
+        dest.writeString(language);
         dest.writeString(distanceUnit);
         dest.writeString(speedUnit);
         if (latitude == null) {

@@ -20,6 +20,7 @@ package org.erlymon.core.model;
 
 
 import com.appunite.websocket.rx.messages.RxEvent;
+import com.appunite.websocket.rx.object.messages.RxObjectEvent;
 
 import org.erlymon.core.model.data.Command;
 import org.erlymon.core.model.data.Device;
@@ -67,7 +68,7 @@ public interface Model {
 
     Observable<Void> createCommand(Command command);
 
-    Observable<RxEvent> openWebSocket();
+    Observable<RxObjectEvent> openWebSocket();
 
     Observable<Void> createPermission(Permission permission);
 

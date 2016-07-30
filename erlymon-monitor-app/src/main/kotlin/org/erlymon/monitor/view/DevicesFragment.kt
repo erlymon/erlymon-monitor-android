@@ -26,17 +26,21 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import io.realm.RealmResults
 import org.slf4j.LoggerFactory
 
 import kotlinx.android.synthetic.main.fragment_devices.*
 import org.erlymon.core.model.data.Device
+import org.erlymon.core.presenter.DevicesListPresenter
+import org.erlymon.core.presenter.DevicesListPresenterImpl
+import org.erlymon.core.view.DevicesListView
 import org.erlymon.monitor.R
 import org.erlymon.monitor.view.adapter.DevicesAdapter
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
  */
-class DevicesFragment : BaseFragment() {
+class DevicesFragment : BaseFragment<DevicesListPresenter>(), DevicesListView {
 
     interface OnActionDeviceListener {
         fun onEditDevice(device: Device)
@@ -73,7 +77,9 @@ class DevicesFragment : BaseFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        lv_devices.adapter = DevicesAdapter(context, storage.devicesSorted)
+        presenter = DevicesListPresenterImpl(context, this)
+
+        //lv_devices.adapter = DevicesAdapter(context, storage.devicesSorted)
         lv_devices.onItemClickListener = object : AdapterView.OnItemClickListener {
             override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
                 val device = lv_devices.getItemAtPosition(position) as Device
@@ -83,6 +89,19 @@ class DevicesFragment : BaseFragment() {
                 popupMenu.show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        presenter?.onLoadDevicesCache()
+    }
+
+    override fun showData(data: RealmResults<Device>) {
+        lv_devices.adapter = DevicesAdapter(context, data)
+    }
+
+    override fun showError(error: String) {
+        makeToast(lv_devices, error)
     }
 
     private inner class OnExecPopupMenuItem(internal var device: Device) : PopupMenu.OnMenuItemClickListener {

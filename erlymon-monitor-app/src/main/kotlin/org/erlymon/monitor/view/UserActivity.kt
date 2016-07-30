@@ -31,6 +31,7 @@ import org.erlymon.core.presenter.UserPresenterImpl
 import org.erlymon.core.view.UserView
 import org.erlymon.monitor.R
 import org.slf4j.LoggerFactory
+import java.util.*
 
 class UserActivity : BaseActivity<UserPresenter>(), UserView {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -105,6 +106,7 @@ class UserActivity : BaseActivity<UserPresenter>(), UserView {
         user.password = password.text.toString()
         user.admin = admin.isChecked
         user.map = map.text.toString()
+        user.language = Locale.getDefault().language
         user.distanceUnit = distanceUnit.text.toString()
         user.speedUnit = speedUnit.text.toString()
         user.latitude = if (latitude.text.length > 0) latitude.text.toString().toDouble() else 0.0

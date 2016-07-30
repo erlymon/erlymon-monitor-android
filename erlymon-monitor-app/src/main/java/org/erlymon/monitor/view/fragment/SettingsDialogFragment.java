@@ -23,6 +23,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.AppCompatSpinner;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
@@ -32,6 +33,10 @@ import org.erlymon.monitor.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.List;
+
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 09.03.16.
@@ -40,12 +45,14 @@ public class SettingsDialogFragment extends BaseDialogFragment {
     private static final Logger logger = LoggerFactory.getLogger(SettingsDialogFragment.class);
     private AutoCompleteTextView dns;
     private CheckBox sslOrTls;
+    private AppCompatSpinner protocolVersion;
 
-    public static SettingsDialogFragment newInstance(String dns, boolean sslOrTls) {
+    public static SettingsDialogFragment newInstance(String dns, boolean sslOrTls, double protocolVersion) {
         SettingsDialogFragment newFragment = new SettingsDialogFragment();
         Bundle args = new Bundle();
         args.putString("dns", dns);
         args.putBoolean("sslOrTls", sslOrTls);
+        args.putDouble("protocolVersion", protocolVersion);
         newFragment.setArguments(args);
         return newFragment;
     }
@@ -54,7 +61,7 @@ public class SettingsDialogFragment extends BaseDialogFragment {
  * implement this interface in order to receive event callbacks.
  * Each method passes the DialogFragment in case the host needs to query it. */
     public interface ServerConfigListener {
-        void onChangeServerConfig(String dns, boolean sslOrTls);
+        void onChangeServerConfig(String dns, boolean sslOrTls, double protocolVersion);
     }
 
     // Use this instance of the interface to deliver action events
@@ -89,6 +96,10 @@ public class SettingsDialogFragment extends BaseDialogFragment {
         sslOrTls = (CheckBox) view.findViewById(R.id.sslOrTls);
         sslOrTls.setChecked(getArguments().getBoolean("sslOrTls"));
 
+        List<String> pv = Arrays.asList(getContext().getResources().getStringArray(R.array.protocol_version_value));
+        protocolVersion  = (AppCompatSpinner) view.findViewById(R.id.protocolVersion);
+        protocolVersion.setSelection(pv.indexOf(String.valueOf(getArguments().getDouble("protocolVersion", 0.0))));
+
         Dialog dialog = new AlertDialog.Builder(getActivity(), isBrokenSamsungDevice() ? android.R.style.Theme_Holo_Light_Dialog : R.style.AppTheme_Dialog)
                 .setTitle(R.string.settingsTitle)
                 .setView(view)
@@ -97,7 +108,8 @@ public class SettingsDialogFragment extends BaseDialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 mListener.onChangeServerConfig(
                                         dns.getText().toString(),
-                                        sslOrTls.isChecked()
+                                        sslOrTls.isChecked(),
+                                        Double.parseDouble(pv.get(protocolVersion.getSelectedItemPosition()))
                                 );
                             }
                         }

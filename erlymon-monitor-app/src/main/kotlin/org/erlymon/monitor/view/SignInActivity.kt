@@ -24,6 +24,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.widget.PopupMenu
+import io.realm.Realm
 
 import org.slf4j.LoggerFactory
 
@@ -56,7 +57,7 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
                 ActivityCompat.requestPermissions(this,  Array(1, { i -> Manifest.permission.WRITE_EXTERNAL_STORAGE }),  REQUEST_WRITE_STORAGE);
             } else {
                 // permission has been granted, continue as usual
-                presenter?.onSignInButtonClick()
+                presenter?.onCreateSession()
             }
 
         }
@@ -70,7 +71,7 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
             popupMenu.setOnMenuItemClickListener{ item ->
                 when (item.itemId) {
                     R.id.action_settings -> {
-                        val dialog = SettingsDialogFragment.newInstance(MainPref.dns, MainPref.sslOrTls)
+                        val dialog = SettingsDialogFragment.newInstance(MainPref.dns, MainPref.sslOrTls, MainPref.protocolVersion.toDouble())
                         dialog.show(supportFragmentManager, "settings_dialog")
                         true
                     }
@@ -85,45 +86,32 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
             }
             popupMenu.show()
         }
+    }
 
+    override fun onResume() {
+        super.onResume()
         presenter?.onGetServer()
     }
 
-    override fun onChangeServerConfig(dns: String, sslOrTls: Boolean) {
-        storage?.deleteAll()
+    override fun onChangeServerConfig(dns: String, sslOrTls: Boolean, protocolVersion: Double) {
+        Realm.getDefaultInstance().executeTransaction { realm -> realm.deleteAll() }
         MainPref.dns = dns
         MainPref.sslOrTls = sslOrTls
-        ApiModule.getInstance().init(applicationContext, MainPref.dns, MainPref.sslOrTls)
+        MainPref.protocolVersion = protocolVersion.toFloat()
+        ApiModule.getInstance().init(applicationContext, MainPref.dns, MainPref.sslOrTls, MainPref.protocolVersion.toDouble())
         presenter?.onGetServer()
     }
 
     override fun showServer(server: Server) {
         logger.debug("showServer => " + server.toString())
-        storage?.createOrUpdateServer(server)
+        intent.putExtra("server", server)
         presenter?.onGetSession()
     }
 
     override fun showSession(user: User) {
         logger.debug("showSession => " + user.toString())
-        storage?.createOrUpdateUser(user)
-
         val intent = Intent(this@SignInActivity, MainActivity::class.java)
-                .putExtra("server", storage?.firstServer)
-                .putExtra("session", user)
-        startActivity(intent)
-    }
-
-    override fun showData(user: User) {
-        logger.debug("showData => " + user.toString())
-
-        MainPref.email = sign_in_email.text.toString()
-        MainPref.password = sign_in_password.text.toString()
-        // write data to storage
-        //storage?.createOrUpdateServer(data?.first)
-        storage?.createOrUpdateUser(user)
-
-        val intent = Intent(this@SignInActivity, MainActivity::class.java)
-                .putExtra("server", storage?.firstServer)
+                .putExtra("server", intent.getParcelableExtra<Server>("server"))
                 .putExtra("session", user)
         startActivity(intent)
     }
@@ -145,7 +133,7 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
         if (requestCode == REQUEST_WRITE_STORAGE) {
             if(grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // We can now safely use the API we requested access to
-                presenter?.onSignInButtonClick()
+                presenter?.onCreateSession()
             } else {
                 // Permission was denied or request was cancelled
                 makeToast(ll_sign_in, getString(R.string.errorPermissionRationale))

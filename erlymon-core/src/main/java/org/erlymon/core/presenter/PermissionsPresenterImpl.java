@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
 /**
@@ -57,6 +59,8 @@ public class PermissionsPresenterImpl implements PermissionsPresenter {
         }
 
         subscription = model.createPermission(view.getPermission())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Void>() {
                     @Override
                     public void onCompleted() {
@@ -83,6 +87,8 @@ public class PermissionsPresenterImpl implements PermissionsPresenter {
         }
 
         subscription = model.deletePermission(view.getPermission())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Void>() {
                     @Override
                     public void onCompleted() {
@@ -112,6 +118,8 @@ public class PermissionsPresenterImpl implements PermissionsPresenter {
                 model.getDevices(true),
                 model.getDevices(view.getUserId()),
                 Pair::new)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Pair<Device[], Device[]>>() {
                     @Override
                     public void onCompleted() {

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2016, Sergey Penkovsky <sergey.penkovsky@gmail.com>
   ~
   ~ This file is part of Erlymon Monitor.
@@ -24,6 +23,7 @@
     android:layout_gravity="center"
     android:orientation="vertical"
     android:padding="10dp">
+
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -34,10 +34,11 @@
             android:layout_height="wrap_content"
             android:hint="@string/configServerDns"
             android:inputType="text"
-            android:minWidth="200dp"
             android:maxLines="1"
+            android:minWidth="200dp"
             android:singleLine="true" />
     </android.support.design.widget.TextInputLayout>
+
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -49,4 +50,10 @@
             android:text="@string/configServerSecure" />
 
     </android.support.design.widget.TextInputLayout>
+
+    <android.support.v7.widget.AppCompatSpinner
+        android:id="@+id/protocolVersion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/protocol_version" />
 </LinearLayout>

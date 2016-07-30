@@ -16,15 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Erlymon Monitor.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.erlymon.core.presenter;
+package org.erlymon.core.view;
+
+import org.erlymon.core.model.data.Device;
+
+import io.realm.RealmResults;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
-public interface MainPresenter extends Presenter {
-    void onDeleteSessionButtonClick();
-    void onDeleteDeviceButtonClick();
-    void onDeleteUserButtonClick();
-    void onSendCommandButtonClick();
-    void onGetPostionByCache();
+public interface DevicesListView extends View {
+    void showData(RealmResults<Device> data);
 }

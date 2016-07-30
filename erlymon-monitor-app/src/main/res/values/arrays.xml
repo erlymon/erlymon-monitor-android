@@ -47,4 +47,12 @@
         <item>@string/mapBingAerial</item>
         <item>@string/mapCustom</item>
     </string-array>
+
+    <string-array name="protocol_version" translatable="false">
+        <item>v3.4</item>
+    </string-array>
+
+    <string-array name="protocol_version_value" translatable="false">
+        <item>3.4</item>
+    </string-array>
 </resources>

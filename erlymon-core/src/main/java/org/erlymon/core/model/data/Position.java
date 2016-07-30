@@ -22,6 +22,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.Until;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,26 +38,55 @@ import io.realm.annotations.PrimaryKey;
 public class Position extends RealmObject implements Parcelable {
     @PrimaryKey
     private Long id;
+
+    @Since(3.0)
     private String protocol;
+
+    @Since(3.0)
     private Long deviceId;
 
-    //private Date serverTime;
+    @Since(3.0)
+    private Date serverTime;
+
+    @Since(3.0)
     private Date deviceTime;
+
+    @Since(3.0)
     private Date fixTime;
 
     private Boolean outdated;
 
+    @Since(3.0)
     @SerializedName("valid")
     private Boolean real;
 
+    @Since(3.0)
     private Double latitude;
+
+    @Since(3.0)
     private Double longitude;
+
+    @Since(3.0)
     private Double altitude;
 
+    @Since(3.0)
     private Float speed;
+
+    @Since(3.0)
     private Float course;
 
-    public Position() {}
+    @Since(3.0)
+    private String address;
+/*
+    @Since(3.0)
+    @Until(3.2)
+    private String other;
+
+    @Since(3.2)
+    private String attributes;
+*/
+    public Position() {
+    }
 
     public Long getId() {
         return id;
@@ -80,7 +111,7 @@ public class Position extends RealmObject implements Parcelable {
     public void setDeviceId(Long deviceId) {
         this.deviceId = deviceId;
     }
-/*
+
     public Date getServerTime() {
         return serverTime;
     }
@@ -88,7 +119,7 @@ public class Position extends RealmObject implements Parcelable {
     public void setServerTime(Date serverTime) {
         this.serverTime = serverTime;
     }
-*/
+
     public Date getDeviceTime() {
         return deviceTime;
     }
@@ -161,12 +192,36 @@ public class Position extends RealmObject implements Parcelable {
         this.course = course;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+/*
+    public String getOther() {
+        return other;
+    }
+
+    public void setOther(String other) {
+        this.other = other;
+    }
+
+    public String getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(String attributes) {
+        this.attributes = attributes;
+    }
+*/
     protected Position(Parcel in) {
         id = in.readByte() == 0x00 ? null : in.readLong();
         protocol = in.readString();
         deviceId = in.readByte() == 0x00 ? null : in.readLong();
         long tmpServerTime = in.readLong();
-        //serverTime = tmpServerTime != -1 ? new Date(tmpServerTime) : null;
+        serverTime = tmpServerTime != -1 ? new Date(tmpServerTime) : null;
         long tmpDeviceTime = in.readLong();
         deviceTime = tmpDeviceTime != -1 ? new Date(tmpDeviceTime) : null;
         long tmpFixTime = in.readLong();
@@ -180,6 +235,9 @@ public class Position extends RealmObject implements Parcelable {
         altitude = in.readByte() == 0x00 ? null : in.readDouble();
         speed = in.readByte() == 0x00 ? null : in.readFloat();
         course = in.readByte() == 0x00 ? null : in.readFloat();
+        address = in.readString();
+        //other = in.readString();
+        //attributes = in.readString();
     }
 
     @Override
@@ -202,7 +260,7 @@ public class Position extends RealmObject implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeLong(deviceId);
         }
-        //dest.writeLong(serverTime != null ? serverTime.getTime() : -1L);
+        dest.writeLong(serverTime != null ? serverTime.getTime() : -1L);
         dest.writeLong(deviceTime != null ? deviceTime.getTime() : -1L);
         dest.writeLong(fixTime != null ? fixTime.getTime() : -1L);
         if (outdated == null) {
@@ -245,6 +303,9 @@ public class Position extends RealmObject implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeFloat(course);
         }
+        dest.writeString(address);
+        //dest.writeString(other);
+        //dest.writeString(attributes);
     }
 
     @SuppressWarnings("unused")

@@ -21,6 +21,9 @@ package org.erlymon.core.model.api;
 import android.content.Context;
 
 import com.appunite.websocket.rx.RxWebSockets;
+import com.appunite.websocket.rx.object.GsonObjectSerializer;
+import com.appunite.websocket.rx.object.ObjectSerializer;
+import com.appunite.websocket.rx.object.RxObjectWebSockets;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.franmontiel.persistentcookiejar.ClearableCookieJar;
 import com.franmontiel.persistentcookiejar.PersistentCookieJar;
@@ -28,6 +31,8 @@ import com.franmontiel.persistentcookiejar.cache.SetCookieCache;
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import org.erlymon.core.model.data.Event;
 
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +54,7 @@ public class ApiModule {
 
     private Gson gson;
     private ApiInterface apiInterface;
-    private RxWebSockets rxWebSockets;
+    private RxObjectWebSockets webSockets;
 
 
     public synchronized static ApiModule getInstance() {
@@ -58,10 +63,11 @@ public class ApiModule {
 
     private ApiModule() {}
 
-    public void init(Context context, String dns, boolean sslOrTls) {
+    public void init(Context context, String dns, boolean sslOrTls, double protocolVersion) {
         // init gson
         gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .setVersion(protocolVersion)
                 .create();
 
 
@@ -80,11 +86,14 @@ public class ApiModule {
                 .cookieJar(cookieJar)
                 .build();
 
-        rxWebSockets = new RxWebSockets(client, new Request.Builder()
+        final RxWebSockets rxWebSockets = new RxWebSockets(client, new Request.Builder()
                 .get()
                 .url("{socket}://{dns}/api/socket".replace("{socket}", sslOrTls ? "wss" : "ws").replace("{dns}", dns))
                 .addHeader("Sec-WebSocket-Protocol", "chat")
                 .build());
+
+        final ObjectSerializer serializer = new GsonObjectSerializer(gson, Event.class);
+        webSockets = new RxObjectWebSockets(rxWebSockets, serializer);
 
         apiInterface = new Retrofit.Builder()
                 .baseUrl("{protocol}://{dns}/api/".replace("{protocol}", sslOrTls ? "https" : "http").replace("{dns}", dns))
@@ -98,8 +107,8 @@ public class ApiModule {
         return apiInterface;
     }
 
-    public RxWebSockets createWebSocket() {
-        return rxWebSockets;
+    public RxObjectWebSockets createWebSocket() {
+        return webSockets;
     }
 
     public Gson getGson() {

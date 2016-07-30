@@ -31,6 +31,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import io.realm.RealmResults
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -40,6 +41,8 @@ import org.erlymon.core.presenter.MainPresenterImpl
 import org.erlymon.core.view.MainView
 import org.erlymon.monitor.R
 import org.erlymon.monitor.view.adapter.CustomFragmentPagerAdapter
+import org.erlymon.monitor.view.adapter.DevicesAdapter
+import org.erlymon.monitor.view.adapter.UsersAdapter
 import org.erlymon.monitor.view.fragment.ConfirmDialogFragment
 import org.erlymon.monitor.view.fragment.SendCommandDialogFragment
 import org.osmdroid.util.GeoPoint
@@ -58,9 +61,6 @@ class MainActivity : BaseActivity<MainPresenter>(),
 
     private var mAccountNameView: TextView? = null
     private var mAccountEmailView: TextView? = null
-    private var deviceId: Long = 0
-    private var userId: Long = 0
-    private var command: Command? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +80,7 @@ class MainActivity : BaseActivity<MainPresenter>(),
 
         val toggle = ActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer_layout.setDrawerListener(toggle)
+        drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
@@ -139,13 +139,6 @@ class MainActivity : BaseActivity<MainPresenter>(),
                 }
             }
         }
-
-        presenter?.onLoadDevices()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        presenter?.onOpenWebSocket()
     }
 
     override fun onBackPressed() {
@@ -162,52 +155,43 @@ class MainActivity : BaseActivity<MainPresenter>(),
         }
     }
 
-    override fun showEvent(event: Event?) {
-        logger.debug("showEvent => " + event.toString())
-        if (event?.devices != null) {
-            storage?.createOrUpdateDevices(event?.devices)
+    override fun showPosition(position: Position) {
+        try {
+            (pagerAdapter?.getItem(0) as MapFragment).animateTo(GeoPoint(position.latitude, position.longitude), 15)
+            view_pager.setCurrentItem(0)
+            nav_view.setCheckedItem(R.id.nav_map)
+        } catch (e: Exception) {
+            logger.warn(Log.getStackTraceString(e))
         }
-        if (event?.positions != null) {
-            storage?.createOrUpdatePositions(event?.positions)
-        }
-    }
-
-    override fun showUsers(users: Array<User>) {
-        logger.debug("showUsers => " + users.size)
-        storage?.createOrUpdateUsers(users)
-    }
-
-    override fun showDevices(devices: Array<Device>) {
-        logger.debug("showDevices => " + devices.size)
-        storage?.createOrUpdateDevices(devices)
-        presenter?.onLoadUsers()
     }
 
     override fun showCompleted() {
-        storage?.deleteAll()
         finish()
     }
 
     override fun showRemoveDeviceCompleted() {
-        storage?.removeDevice(deviceId)
-        deviceId = 0
+        intent.putExtra("deviceId", 0)
     }
 
     override fun showRemoveUserCompleted() {
-        storage?.removeUser(userId)
-        userId = 0
+        intent.putExtra("userId", 0)
     }
 
     override fun getUserId(): Long {
-        return userId
+        return intent.getLongExtra("userId", 0)
     }
 
     override fun getDeviceId(): Long {
-        return deviceId
+        return intent.getLongExtra("deviceId", 0)
     }
 
-    override fun getCommand(): Command? {
-        command?.deviceId = deviceId
+    override fun getPositionId(): Long {
+        return intent.getLongExtra("positionId", 0)
+    }
+
+    override fun getCommand(): Command {
+        val command = intent.getParcelableExtra<Command>("command")
+        command.deviceId = deviceId
         return command
     }
 
@@ -218,10 +202,11 @@ class MainActivity : BaseActivity<MainPresenter>(),
     @SuppressWarnings("StatementWithEmptyBody")
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
-        val id = item.itemId
         when (item.itemId) {
             R.id.nav_map -> {
                 view_pager.setCurrentItem(0)
+                val center = calculateMapCenter()
+                (pagerAdapter?.getItem(0) as MapFragment).animateTo(center.first, center.second)
             }
             R.id.nav_devices -> {
                 view_pager.setCurrentItem(1)
@@ -260,20 +245,16 @@ class MainActivity : BaseActivity<MainPresenter>(),
                 if (resultCode == RESULT_OK) {
                     val server = data?.getParcelableExtra<Server>("server")
                     intent.putExtra("server", server)
-                    storage?.createOrUpdateServer(server)
                 }
             REQUEST_CODE_UPDATE_ACCOUNT ->
                 if (resultCode == RESULT_OK) {
                     val user = data?.getParcelableExtra<User>("user")
                     intent.putExtra("session", user)
-                    storage?.createOrUpdateUser(user)
                     mAccountNameView?.text = user?.name
                     mAccountEmailView?.text = user?.email
                 }
             REQUEST_CODE_CREATE_OR_UPDATE_DEVICE ->
                 if (resultCode == RESULT_OK) {
-                    val device = data?.getParcelableExtra<Device>("device")
-                    storage?.createOrUpdateDevice(device)
                 }
         }
     }
@@ -286,7 +267,7 @@ class MainActivity : BaseActivity<MainPresenter>(),
     }
 
     override fun onRemoveDevice(device: Device) {
-        deviceId = device.id
+        intent.putExtra("deviceId", device.id)
         val dialogFragment = ConfirmDialogFragment.newInstance(R.string.deviceTitle, R.string.sharedRemoveConfirm)
         dialogFragment.show(supportFragmentManager, "remove_item_dialog")
     }
@@ -299,18 +280,12 @@ class MainActivity : BaseActivity<MainPresenter>(),
     }
 
     override fun onShowOnMap(device: Device) {
-        try {
-            val position = storage?.getPositionById(device.positionId)
-            (pagerAdapter?.getItem(0) as MapFragment).animateTo(GeoPoint(position?.latitude as Double, position?.longitude as Double), 15)
-            view_pager.setCurrentItem(0)
-            nav_view.setCheckedItem(R.id.nav_map)
-        } catch (e: Exception) {
-            logger.warn(Log.getStackTraceString(e))
-        }
+        intent.putExtra("positionId", device.positionId)
+        presenter?.onGetPostionByCache()
     }
 
     override fun onSendCommand(device: Device) {
-        deviceId = device.getId();
+        intent.putExtra("deviceId", device.id)
         val dialogFragment = SendCommandDialogFragment.newInstance(device.id)
         dialogFragment.show(supportFragmentManager, "send_command_dialog")
     }
@@ -323,7 +298,7 @@ class MainActivity : BaseActivity<MainPresenter>(),
     }
 
     override fun onRemoveUser(user: User) {
-        userId = user.id
+        intent.putExtra("userId", user.id)
         val dialogFragment = ConfirmDialogFragment.newInstance(R.string.deviceTitle, R.string.sharedRemoveConfirm)
         dialogFragment.show(supportFragmentManager, "remove_item_dialog")
     }
@@ -345,8 +320,21 @@ class MainActivity : BaseActivity<MainPresenter>(),
     }
 
     override fun onSendCommand(command: Command?) {
-        this.command = command;
+        intent.putExtra("command", command)
         presenter?.onSendCommandButtonClick()
+    }
+
+    private fun calculateMapCenter() :Pair<GeoPoint, Int> {
+        val user = intent.getParcelableExtra<User>("session")
+        if (user.latitude === 0.0 && user.longitude === 0.0 && user.zoom === 0) {
+            val server = intent.getParcelableExtra<Server>("server")
+            if (server.latitude === 0.0 && server.longitude === 0.0 && server.zoom === 0) {
+                return Pair(GeoPoint(server.latitude, server.longitude), server.zoom)
+            }
+        } else {
+            return Pair(GeoPoint(user.latitude, user.longitude), user.zoom)
+        }
+        return Pair(GeoPoint(0, 0), 0)
     }
 
     companion object {
