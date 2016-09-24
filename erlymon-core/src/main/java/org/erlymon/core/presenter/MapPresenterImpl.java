@@ -22,6 +22,7 @@ package org.erlymon.core.presenter;
 import android.content.Context;
 import android.util.Log;
 
+import com.appunite.websocket.rx.object.messages.RxObjectEvent;
 import com.appunite.websocket.rx.object.messages.RxObjectEventMessage;
 
 import org.erlymon.core.model.Model;
@@ -40,6 +41,8 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -62,14 +65,22 @@ public class MapPresenterImpl implements MapPresenter {
 
     @Override
     public void onOpenWebSocket() {
+        logger.debug("onStart");
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
         }
 
         subscription = model.openWebSocket()
                 .subscribeOn(Schedulers.io())
+                .doOnNext(rxObjectEvent -> logger.error("DUMP RxObjectEvent => " + rxObjectEvent))
                 .compose(MoreObservables.filterAndMap(RxObjectEventMessage.class))
+                .doOnNext(rxObjectEventMessage -> logger.error("DUMP RxObjectEventMessage => " + rxObjectEventMessage))
                 .compose(RxObjectEventMessage.filterAndMap(Event.class))
+                .doOnNext(event -> logger.error("DUMP Event => " + event))
+                .onErrorReturn(throwable -> {
+                    logger.error(Log.getStackTraceString(throwable));
+                    return new Event();
+                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(event -> realmdb.executeTransactionAsync(realm -> {
                     if (event.getPositions() != null) {
@@ -80,35 +91,21 @@ public class MapPresenterImpl implements MapPresenter {
                     }
                 }))
                 .flatMap(event -> {
-                    if (event.getDevices() == null && event.getPositions() != null) {
+                    if ((event.getDevices() == null || event.getDevices().length == 0) && event.getPositions() != null) {
                         return realmdb.where(Device.class).findAllAsync().asObservable()
                                 .flatMap(devices -> Observable.just(new Event(devices.toArray(new Device[devices.size()]), event.getPositions())));
                     } else {
                         return Observable.just(event);
                     }
                 })
-                .subscribe(new Observer<Event>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        logger.error(Log.getStackTraceString(e));
-                        view.showError(e.getMessage());
-                    }
-
-                    @Override
-                    public void onNext(Event event) {
-                        logger.debug("Event: " + event);
-                        view.showEvent(event);
-                    }
-                });
+                .doOnNext(event -> view.showEvent(event))
+                //.retry()
+                .subscribe();
     }
 
     @Override
     public void onStop() {
+        logger.debug("onStop");
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
         }
