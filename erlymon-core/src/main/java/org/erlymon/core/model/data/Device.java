@@ -180,4 +180,17 @@ public class Device extends RealmObject implements Parcelable {
             return new Device[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "Device{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", uniqueId='" + uniqueId + '\'' +
+                ", status='" + status + '\'' +
+                ", lastUpdate=" + lastUpdate +
+                ", positionId=" + positionId +
+                ", dataId=" + dataId +
+                '}';
+    }
 }

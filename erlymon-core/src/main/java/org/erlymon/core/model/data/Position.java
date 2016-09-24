@@ -332,4 +332,24 @@ public class Position extends RealmObject implements Parcelable {
         array.add("" + position.getCourse());
         return array;
     }
+
+    @Override
+    public String toString() {
+        return "Position{" +
+                "id=" + id +
+                ", protocol='" + protocol + '\'' +
+                ", deviceId=" + deviceId +
+                ", serverTime=" + serverTime +
+                ", deviceTime=" + deviceTime +
+                ", fixTime=" + fixTime +
+                ", outdated=" + outdated +
+                ", real=" + real +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", altitude=" + altitude +
+                ", speed=" + speed +
+                ", course=" + course +
+                ", address='" + address + '\'' +
+                '}';
+    }
 }

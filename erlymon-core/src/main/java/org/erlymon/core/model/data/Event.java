@@ -18,6 +18,8 @@
  */
 package org.erlymon.core.model.data;
 
+import java.util.Arrays;
+
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/19/16.
  */
@@ -37,5 +39,13 @@ public class Event {
 
     public Position[] getPositions() {
         return positions;
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "devices=" + (devices != null ? Arrays.toString(devices) : "[]") +
+                ", positions=" + (positions != null ? Arrays.toString(positions) : "[]") +
+                '}';
     }
 }
