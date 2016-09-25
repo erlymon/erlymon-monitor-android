@@ -140,8 +140,7 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
     }
 
     override fun showError(error: String) {
-        //makeToast(mapview, error)
-        presenter?.onOpenWebSocket()
+        makeToast(mapview, error)
     }
 
     companion object {
