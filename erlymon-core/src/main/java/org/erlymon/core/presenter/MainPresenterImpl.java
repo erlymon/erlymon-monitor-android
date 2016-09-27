@@ -19,6 +19,7 @@
 package org.erlymon.core.presenter;
 
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.util.Log;
 
@@ -49,13 +50,16 @@ public class MainPresenterImpl implements MainPresenter {
     private Model model;
     private Realm realmdb;
 
+    private ProgressDialog progressDialog;
     private MainView view;
     private Subscription subscription = Subscriptions.empty();
 
-    public MainPresenterImpl(Context context, MainView view) {
+    public MainPresenterImpl(Context context, MainView view, int progressMessageId) {
         this.view = view;
         this.model = new ModelImpl(context);
         this.realmdb = Realm.getDefaultInstance();
+        this.progressDialog = new ProgressDialog(context);
+        this.progressDialog.setMessage(context.getString(progressMessageId));
     }
 
     @Override
@@ -65,6 +69,7 @@ public class MainPresenterImpl implements MainPresenter {
             subscription.unsubscribe();
         }
 
+        progressDialog.show();
         subscription = model.deleteSession()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -77,12 +82,14 @@ public class MainPresenterImpl implements MainPresenter {
 
                     @Override
                     public void onError(Throwable e) {
+                        progressDialog.hide();
                         logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
                     @Override
                     public void onNext(Void data) {
+                        progressDialog.hide();
                         view.showCompleted();
                     }
                 });
@@ -229,6 +236,10 @@ public class MainPresenterImpl implements MainPresenter {
 
         if (!realmdb.isClosed()) {
             realmdb.close();
+        }
+
+        if (progressDialog.isShowing()) {
+            progressDialog.hide();
         }
     }
 }

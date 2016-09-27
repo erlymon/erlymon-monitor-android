@@ -19,6 +19,7 @@
 package org.erlymon.core.presenter;
 
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.util.Log;
 
@@ -50,13 +51,16 @@ public class SignInPresenterImpl implements SignInPresenter {
     private Model model;
     private Realm realmdb;
 
+    private ProgressDialog progressDialog;
     private SignInView view;
     private Subscription subscription = Subscriptions.empty();
 
-    public SignInPresenterImpl(Context context, SignInView view) {
+    public SignInPresenterImpl(Context context, SignInView view, int progressMessageId) {
         this.view = view;
         this.model = new ModelImpl(context);
         this.realmdb = Realm.getDefaultInstance();
+        this.progressDialog = new ProgressDialog(context);
+        this.progressDialog.setMessage(context.getString(progressMessageId));
     }
 
     @Override
@@ -65,6 +69,7 @@ public class SignInPresenterImpl implements SignInPresenter {
             subscription.unsubscribe();
         }
 
+        progressDialog.show();
         subscription = model.getServer()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -80,12 +85,14 @@ public class SignInPresenterImpl implements SignInPresenter {
 
                     @Override
                     public void onError(Throwable e) {
+                        progressDialog.hide();
                         logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
                     @Override
                     public void onNext(Server data) {
+                        progressDialog.hide();
                         view.showServer(data);
                     }
                 });
@@ -97,6 +104,7 @@ public class SignInPresenterImpl implements SignInPresenter {
             subscription.unsubscribe();
         }
 
+        progressDialog.show();
         subscription = model.getSession()
                 .subscribeOn(Schedulers.io())
                 .flatMap(user -> {
@@ -123,12 +131,14 @@ public class SignInPresenterImpl implements SignInPresenter {
 
                     @Override
                     public void onError(Throwable e) {
+                        progressDialog.hide();
                         logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
                     @Override
                     public void onNext(Triple<User, Device[], User[]> data) {
+                        progressDialog.hide();
                         view.showSession(data.first);
                     }
                 });
@@ -141,6 +151,7 @@ public class SignInPresenterImpl implements SignInPresenter {
             subscription.unsubscribe();
         }
 
+        progressDialog.show();
         subscription = model.createSession(view.getEmail(), view.getPassword())
                 .subscribeOn(Schedulers.io())
                 .flatMap(user -> {
@@ -167,12 +178,14 @@ public class SignInPresenterImpl implements SignInPresenter {
 
                     @Override
                     public void onError(Throwable e) {
+                        progressDialog.hide();
                         logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
                     @Override
                     public void onNext(Triple<User, Device[], User[]> data) {
+                        progressDialog.hide();
                         view.showSession(data.first);
                     }
                 });
@@ -186,6 +199,10 @@ public class SignInPresenterImpl implements SignInPresenter {
 
         if (!realmdb.isClosed()) {
             realmdb.close();
+        }
+
+        if (progressDialog.isShowing()) {
+            progressDialog.hide();
         }
     }
 }

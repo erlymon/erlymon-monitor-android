@@ -47,7 +47,7 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signin)
 
-        presenter = SignInPresenterImpl(this, this)
+        presenter = SignInPresenterImpl(this, this, R.string.sharedLoading)
 
         sign_in_email.setText(MainPref.email)
         sign_in_password.setText(MainPref.password);

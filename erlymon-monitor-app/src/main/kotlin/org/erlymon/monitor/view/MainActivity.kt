@@ -68,7 +68,7 @@ class MainActivity : BaseActivity<MainPresenter>(),
 
         setSupportActionBar(toolbar)
 
-        presenter = MainPresenterImpl(this, this)
+        presenter = MainPresenterImpl(this, this, R.string.sharedLoading)
 
         val linearLayout = nav_view.getHeaderView(0) as LinearLayout
         mAccountNameView = linearLayout.getChildAt(1) as TextView
