@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
 import rx.Observable;
@@ -43,6 +44,7 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -51,6 +53,7 @@ import rx.subscriptions.Subscriptions;
  */
 public class MapPresenterImpl implements MapPresenter {
     private static final Logger logger = LoggerFactory.getLogger(MapPresenterImpl.class);
+
     private Model model;
     private Realm realmdb;
 
@@ -77,10 +80,13 @@ public class MapPresenterImpl implements MapPresenter {
                 .doOnNext(rxObjectEventMessage -> logger.error("DUMP RxObjectEventMessage => " + rxObjectEventMessage))
                 .compose(RxObjectEventMessage.filterAndMap(Event.class))
                 .doOnNext(event -> logger.error("DUMP Event => " + event))
-                .onErrorReturn(throwable -> {
-                    logger.error(Log.getStackTraceString(throwable));
-                    return new Event();
-                })
+                .retryWhen(observable -> observable.flatMap(new Func1<Throwable, Observable<?>>() {
+                    @Override
+                    public Observable<?> call(Throwable throwable) {
+                        logger.warn(Log.getStackTraceString(throwable));
+                        return Observable.timer(1, TimeUnit.SECONDS);
+                    }
+                }))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(event -> realmdb.executeTransactionAsync(realm -> {
                     if (event.getPositions() != null) {
