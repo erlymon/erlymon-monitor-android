@@ -47,6 +47,7 @@ import org.erlymon.core.presenter.MapPresenterImpl
 import org.erlymon.core.presenter.UsersListPresenterImpl
 import org.erlymon.core.view.MapView
 import org.erlymon.monitor.R
+import org.erlymon.monitor.view.map.marker.MarkerWithLabel
 import org.osmdroid.util.BoundingBoxE6
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
@@ -65,7 +66,7 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
     }
 
     private var mRadiusMarkerClusterer: DevicesMarkerClusterer? = null
-    private var markers: MutableMap<Long, Marker> = HashMap()
+    private var markers: MutableMap<Long, MarkerWithLabel> = HashMap()
     private var mLocationOverlay: MyLocationNewOverlay? = null
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
@@ -152,9 +153,9 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
     fun updateUnitMarker(device: Device, position: Position) {
         try {
             logger.debug("UPDATE MARKER: " + device)
-            var marker: Marker? = markers[device.id]
+            var marker: MarkerWithLabel? = markers[device.id]
             if (marker == null) {
-                marker = Marker(mapview)
+                marker = MarkerWithLabel(mapview, device.name)
                 mRadiusMarkerClusterer?.add(marker)
                 markers.put(device.id, marker)
 
