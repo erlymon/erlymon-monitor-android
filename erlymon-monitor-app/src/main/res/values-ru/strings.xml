@@ -108,4 +108,6 @@
     <string name="aboutLicense">Это приложение распростаняется бесплатно, исходный код распростаняется по лицензии GNU General Public License, Version 3.0 и доступен на GitHub.</string>
     <string name="aboutDescription">Erlymon Monitor это Android-приложение. Совместимо с Erlymon/Traccar сервером мониторинга.</string>
     <string name="userTitle">Пользователь</string>
+    <string name="errorPermissionWriteStorage">Доступ на запись к внутренней памяти необходим для кеширования карт.</string>
+    <string name="errorPermissionCoarseLocation">Доступ к местоположению необходим для отображение авшего местоположения на карте.</string>
 </resources>

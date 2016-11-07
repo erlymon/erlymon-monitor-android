@@ -126,4 +126,6 @@
     <string name="aboutLicense">Esta aplicação é livre e de código aberto, o código fonte é licenciado sob a licença GNU General Public Versão 3.0 e disponível no GitHub.</string>
     <string name="aboutDescription">Erlymon Monitor is an Android  application. It can work with Erlymon/Traccar open source server software.</string>
     <string name="userTitle">User</string>
+    <string name="errorPermissionWriteStorage">Write sotrage permissions are needed for show map.</string>
+    <string name="errorPermissionCoarseLocation">Coarse location permissions are needed for show your location.</string>
 </resources>

@@ -24,6 +24,8 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.widget.PopupMenu
+import com.jakewharton.rxbinding.view.RxView
+import com.tbruyelle.rxpermissions.RxPermissions
 import io.realm.Realm
 
 import org.slf4j.LoggerFactory
@@ -51,20 +53,21 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
 
         sign_in_email.setText(MainPref.email)
         sign_in_password.setText(MainPref.password);
-        sign_in_button.setOnClickListener { v ->
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                // Check Permissions Now
-                ActivityCompat.requestPermissions(this,  Array(1, { i -> Manifest.permission.WRITE_EXTERNAL_STORAGE }),  REQUEST_WRITE_STORAGE);
-            } else {
-                // permission has been granted, continue as usual
-                presenter?.onCreateSession()
-            }
+        RxView.clicks(sign_in_button)
+                .compose(RxPermissions.getInstance(this).ensure(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                .subscribe({ granted ->
+                    if (granted) {
+                        presenter?.onCreateSession()
+                    } else {
+                        makeToast(sign_in_button, getString(R.string.errorPermissionWriteStorage))
+                    }
+                })
 
-        }
         sign_up_button.setOnClickListener { v ->
             val intent = Intent(this@SignInActivity, SignUpActivity::class.java)
             startActivity(intent)
         }
+
         serverConfig.setOnClickListener { v ->
             val popupMenu = PopupMenu(this@SignInActivity, serverConfig)
             popupMenu.inflate(R.menu.settings_popupmenu)
@@ -126,19 +129,6 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
 
     override fun getPassword(): String {
         return sign_in_password.text.toString()
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_WRITE_STORAGE) {
-            if(grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // We can now safely use the API we requested access to
-                presenter?.onCreateSession()
-            } else {
-                // Permission was denied or request was cancelled
-                makeToast(ll_sign_in, getString(R.string.errorPermissionRationale))
-            }
-        }
     }
 
     companion object {
