@@ -18,6 +18,7 @@
  */
 package org.erlymon.monitor.view
 
+import android.Manifest
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
@@ -26,6 +27,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.jakewharton.rxbinding.view.RxView
+import com.tbruyelle.rxpermissions.RxPermissions
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import io.realm.RealmResults
@@ -46,6 +49,8 @@ import org.erlymon.core.view.MapView
 import org.erlymon.monitor.R
 import org.osmdroid.util.BoundingBoxE6
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
@@ -61,6 +66,7 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
 
     private var mRadiusMarkerClusterer: DevicesMarkerClusterer? = null
     private var markers: MutableMap<Long, Marker> = HashMap()
+    private var mLocationOverlay: MyLocationNewOverlay? = null
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -79,6 +85,37 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
 
         mapview.isTilesScaledToDpi = true
         mapview.setMultiTouchControls(true)
+
+        RxView.clicks(myPlace)
+                .compose(RxPermissions.getInstance(context).ensure(Manifest.permission.ACCESS_COARSE_LOCATION))
+                .subscribe({ granted ->
+                    if (granted) {
+                        if (myPlace.isChecked) {
+                            mLocationOverlay?.enableFollowLocation()
+                            mLocationOverlay?.enableMyLocation()
+                            mLocationOverlay?.runOnFirstFix {
+                                mapview.post {
+                                    try {
+                                        mapview.controller.setZoom(15)
+                                        mapview.controller.animateTo(GeoPoint(
+                                                mLocationOverlay!!.lastFix.latitude,
+                                                mLocationOverlay!!.lastFix.longitude
+                                        ))
+                                        mapview.postInvalidate()
+                                    } catch (e: Exception) {
+
+                                    }
+                                }
+                            }
+                        } else {
+                            mLocationOverlay?.disableFollowLocation()
+                            mLocationOverlay?.disableMyLocation()
+                        }
+                    } else {
+                        myPlace.isChecked = false
+                        makeToast(myPlace, getString(R.string.errorPermissionCoarseLocation))
+                    }
+                })
     }
 
     override fun onResume() {
@@ -88,10 +125,19 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
         mRadiusMarkerClusterer?.setIcon(BitmapFactory.decodeResource(resources, R.drawable.marker_cluster))
         mapview.overlays.add(mRadiusMarkerClusterer)
 
+        mLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(activity), mapview)
+        mLocationOverlay?.disableFollowLocation()
+        mLocationOverlay?.disableMyLocation()
+        mapview.getOverlays().add(mLocationOverlay)
+
         presenter?.onOpenWebSocket()
     }
 
     override fun onPause() {
+        mLocationOverlay?.disableFollowLocation()
+        mLocationOverlay?.disableMyLocation()
+
+        mapview.overlays.remove(mLocationOverlay)
         mapview.overlays.remove(mRadiusMarkerClusterer)
         markers.clear()
         super.onPause()
