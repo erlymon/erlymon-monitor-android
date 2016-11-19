@@ -22,4 +22,8 @@
     <color name="colorPrimary">#3892d4</color>
     <color name="colorPrimaryDark">#157fcc</color>
     <color name="colorAccent">#6aadde</color>
+
+    <color name="colorOnlineStatus">#c7fbdb</color>
+    <color name="colorOfflineStatus">#ffccd2</color>
+    <color name="colorUnknownStatus">#feecca</color>
 </resources>
