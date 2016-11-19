@@ -21,6 +21,7 @@ package org.erlymon.monitor.view.adapter;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridLayout;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
@@ -43,10 +44,12 @@ public class DevicesAdapter extends RealmBaseAdapter<Device> implements ListAdap
      * Реализация класса ViewHolder, хранящего ссылки на виджеты.
      */
     class ViewHolder {
+        private GridLayout layout;
         private TextView name;
         private TextView identifier;
 
         public ViewHolder(View itemView) {
+            layout = (GridLayout) itemView.findViewById(R.id.layout);
             name = (TextView) itemView.findViewById(R.id.name);
             identifier = (TextView) itemView.findViewById(R.id.identifier);
         }
@@ -66,7 +69,16 @@ public class DevicesAdapter extends RealmBaseAdapter<Device> implements ListAdap
         Device item = adapterData.get(position);
         viewHolder.name.setText(item.getName());
         viewHolder.identifier.setText(item.getUniqueId());
+        viewHolder.layout.setBackgroundResource(getStatusColorId(item.getStatus()));
         return convertView;
     }
 
+    private int getStatusColorId(String status) {
+        switch (status) {
+            case "online": return R.color.colorOnlineStatus;
+            case "offline": return R.color.colorOfflineStatus;
+            case "unknown": return R.color.colorUnknownStatus;
+            default: return R.color.colorUnknownStatus;
+        }
+    }
 }
