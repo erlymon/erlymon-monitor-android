@@ -67,7 +67,7 @@ public class DevicesTable {
                 + COLUMN_NAME + " STRING NOT NULL, "
                 + COLUMN_UNIQUE_ID + " STRING NOT NULL, "
                 + COLUMN_STATUS + " STRING NOT NULL, "
-                + COLUMN_LAST_UPDATE + " INTEGER DEFAULT NULL, "
+                + COLUMN_LAST_UPDATE + " INTEGER NOT NULL, "
                 + COLUMN_POSITION_ID + " INTEGER DEFAULT NULL"
                 + ");";
     }

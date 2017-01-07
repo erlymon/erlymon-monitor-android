@@ -23,11 +23,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.util.Log;
 
+import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
+
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
 import org.erlymon.core.model.api.util.tuple.Triple;
 import org.erlymon.core.model.data.Device;
 import org.erlymon.core.model.data.Server;
+import org.erlymon.core.model.data.StorageModule;
 import org.erlymon.core.model.data.User;
 import org.erlymon.core.view.SignInView;
 import org.slf4j.Logger;
@@ -40,6 +44,9 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -49,7 +56,6 @@ import rx.subscriptions.Subscriptions;
 public class SignInPresenterImpl implements SignInPresenter {
     private static final Logger logger = LoggerFactory.getLogger(SignInPresenterImpl.class);
     private Model model;
-    private Realm realmdb;
 
     private ProgressDialog progressDialog;
     private SignInView view;
@@ -58,7 +64,6 @@ public class SignInPresenterImpl implements SignInPresenter {
     public SignInPresenterImpl(Context context, SignInView view, int progressMessageId) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
         this.progressDialog = new ProgressDialog(context);
         this.progressDialog.setMessage(context.getString(progressMessageId));
     }
@@ -71,12 +76,20 @@ public class SignInPresenterImpl implements SignInPresenter {
 
         progressDialog.show();
         subscription = model.getServer()
+                .flatMap(new Func1<Server, Observable<Server>>() {
+                    @Override
+                    public Observable<Server> call(Server server) {
+                        return StorageModule.getInstance().getStorage()
+                                .put()
+                                .object(server)
+                                .prepare()
+                                .asRxObservable()
+                                .map(putResult -> server);
+                    }
+                })
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(server -> realmdb.executeTransactionAsync(realm -> {
-                    realm.delete(Server.class);
-                    realm.copyToRealm(server);
-                }))
                 .subscribe(new Observer<Server>() {
                     @Override
                     public void onCompleted() {
@@ -86,7 +99,6 @@ public class SignInPresenterImpl implements SignInPresenter {
                     @Override
                     public void onError(Throwable e) {
                         progressDialog.hide();
-                        logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
@@ -106,7 +118,6 @@ public class SignInPresenterImpl implements SignInPresenter {
 
         progressDialog.show();
         subscription = model.getSession()
-                .subscribeOn(Schedulers.io())
                 .flatMap(user -> {
                     if (user.getAdmin()) {
                         return Observable.zip(model.getDevices(), model.getUsers(), (devices, users) -> new Triple<>(user, devices, users)).asObservable();
@@ -117,13 +128,32 @@ public class SignInPresenterImpl implements SignInPresenter {
                         });
                     }
                 })
+                .flatMap(new Func1<Triple<User, Device[], User[]>, Observable<User>>() {
+                    @Override
+                    public Observable<User> call(final Triple<User, Device[], User[]> data) {
+                        Observable<PutResults<Device>> devicesObserver = StorageModule.getInstance().getStorage()
+                                .put()
+                                .objects(Arrays.asList(data.second))
+                                .prepare()
+                                .asRxObservable();
+
+                        Observable<PutResults<User>> usersObserver = StorageModule.getInstance().getStorage()
+                                .put()
+                                .objects(Arrays.asList(data.third))
+                                .prepare()
+                                .asRxObservable();
+
+                        return Observable.zip(
+                                devicesObserver,
+                                usersObserver,
+                                (devicePutResults, userPutResults) -> data.first
+                        );
+                    }
+                })
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(triple -> realmdb.executeTransactionAsync(realm -> {
-                    realm.copyToRealmOrUpdate(triple.first);
-                    realm.copyToRealmOrUpdate(Arrays.asList(triple.second));
-                    realm.copyToRealmOrUpdate(Arrays.asList(triple.third));
-                }))
-                .subscribe(new Observer<Triple<User, Device[], User[]>>() {
+                .subscribe(new Observer<User>() {
                     @Override
                     public void onCompleted() {
 
@@ -137,9 +167,9 @@ public class SignInPresenterImpl implements SignInPresenter {
                     }
 
                     @Override
-                    public void onNext(Triple<User, Device[], User[]> data) {
+                    public void onNext(User data) {
                         progressDialog.hide();
-                        view.showSession(data.first);
+                        view.showSession(data);
                     }
                 });
     }
@@ -164,13 +194,32 @@ public class SignInPresenterImpl implements SignInPresenter {
                         });
                     }
                 })
+                .flatMap(new Func1<Triple<User, Device[], User[]>, Observable<User>>() {
+                    @Override
+                    public Observable<User> call(final Triple<User, Device[], User[]> data) {
+                        Observable<PutResults<Device>> devicesObserver = StorageModule.getInstance().getStorage()
+                                .put()
+                                .objects(Arrays.asList(data.second))
+                                .prepare()
+                                .asRxObservable();
+
+                        Observable<PutResults<User>> usersObserver = StorageModule.getInstance().getStorage()
+                                .put()
+                                .objects(Arrays.asList(data.third))
+                                .prepare()
+                                .asRxObservable();
+
+                        return Observable.zip(
+                                devicesObserver,
+                                usersObserver,
+                                (devicePutResults, userPutResults) -> data.first
+                        );
+                    }
+                })
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(triple -> realmdb.executeTransactionAsync(realm -> {
-                    realm.copyToRealmOrUpdate(triple.first);
-                    realm.copyToRealmOrUpdate(Arrays.asList(triple.second));
-                    realm.copyToRealmOrUpdate(Arrays.asList(triple.third));
-                }))
-                .subscribe(new Observer<Triple<User, Device[], User[]>>() {
+                .subscribe(new Observer<User>() {
                     @Override
                     public void onCompleted() {
 
@@ -184,9 +233,9 @@ public class SignInPresenterImpl implements SignInPresenter {
                     }
 
                     @Override
-                    public void onNext(Triple<User, Device[], User[]> data) {
+                    public void onNext(User data) {
                         progressDialog.hide();
-                        view.showSession(data.first);
+                        view.showSession(data);
                     }
                 });
     }
@@ -195,10 +244,6 @@ public class SignInPresenterImpl implements SignInPresenter {
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
 
         if (progressDialog.isShowing()) {

@@ -89,7 +89,7 @@ public class StorageModule {
             contentValues.put("name", object.name);
             contentValues.put("unique_id", object.uniqueId);
             contentValues.put("status", object.status);
-            contentValues.put("last_update", object.lastUpdate.getTime());
+            contentValues.put("last_update", object.lastUpdate == null ? 0 : object.lastUpdate.getTime());
             contentValues.put("position_id", object.positionId);
 
             return contentValues;
@@ -111,7 +111,7 @@ public class StorageModule {
             object.name = cursor.getString(cursor.getColumnIndex("name"));
             object.uniqueId = cursor.getString(cursor.getColumnIndex("unique_id"));
             object.status = cursor.getString(cursor.getColumnIndex("status"));
-            object.lastUpdate = new Date(cursor.getInt(cursor.getColumnIndex("last_update")));
+            object.lastUpdate = cursor.getInt(cursor.getColumnIndex("last_update")) == 0 ? null : new Date(cursor.getInt(cursor.getColumnIndex("last_update")));
             if(!cursor.isNull(cursor.getColumnIndex("position_id"))) {
                 object.positionId = cursor.getLong(cursor.getColumnIndex("position_id"));
             }
