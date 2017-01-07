@@ -152,7 +152,7 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
 
     fun updateUnitMarker(device: Device, position: Position) {
         try {
-            logger.debug("UPDATE MARKER: " + device)
+            logger.debug("UPDATE MARKER: device: $device position: $position")
             var marker: MarkerWithLabel? = markers[device.id]
             if (marker == null) {
                 marker = MarkerWithLabel(mapview, device.name)
@@ -161,7 +161,9 @@ class MapFragment : BaseFragment<MapPresenter>(), MapView {
 
             }
             marker.title = device.name
-            marker.snippet = position.fixTime.toString()
+            if (position.fixTime != null) {
+                marker.snippet = position.fixTime.toString()
+            }
 
             marker.setIcon(arrowDrawable)
             if (position.course != null) {
