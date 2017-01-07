@@ -24,6 +24,8 @@ import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 
 import java.util.Date;
 
@@ -33,40 +35,42 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
+@StorIOSQLiteType(table = DevicesTable.TABLE)
 public class Device extends RealmObject implements Parcelable {
+    @StorIOSQLiteColumn(name = DevicesTable.COLUMN_ID, key = true)
     @PrimaryKey
-    private Long id;
+    Long id;
 
+    @StorIOSQLiteColumn(name = DevicesTable.COLUMN_NAME)
     @Since(3.0)
     @SerializedName("name")
     @Expose
-    private String name;
+    String name;
 
+    @StorIOSQLiteColumn(name = DevicesTable.COLUMN_UNIQUE_ID)
     @Since(3.0)
     @SerializedName("uniqueId")
     @Expose
-    private String uniqueId;
+    String uniqueId;
 
+    @StorIOSQLiteColumn(name = DevicesTable.COLUMN_STATUS)
     @Since(3.3)
     @SerializedName("status")
     @Expose
-    private String status;
+    String status;
 
+    //@StorIOSQLiteColumn(name = DevicesTable.COLUMN_LAST_UPDATE)
     @Since(3.3)
     @SerializedName("lastUpdate")
     @Expose
-    private Date lastUpdate;
+    Date lastUpdate;
 
 
+    @StorIOSQLiteColumn(name = DevicesTable.COLUMN_POSITION_ID)
     @Since(3.4)
     @SerializedName("positionId")
     @Expose
-    private Long positionId;
-
-    @Since(3.4)
-    @SerializedName("dataId")
-    @Expose
-    private Long dataId;
+    Long positionId;
 
     public Device() {}
 
@@ -118,14 +122,6 @@ public class Device extends RealmObject implements Parcelable {
         this.positionId = positionId;
     }
 
-    public Long getDataId() {
-        return dataId;
-    }
-
-    public void setDataId(Long dataId) {
-        this.dataId = dataId;
-    }
-
     protected Device(Parcel in) {
         id = in.readByte() == 0x00 ? null : in.readLong();
         name = in.readString();
@@ -134,7 +130,6 @@ public class Device extends RealmObject implements Parcelable {
         long tmpLastUpdate = in.readLong();
         lastUpdate = tmpLastUpdate != -1 ? new Date(tmpLastUpdate) : null;
         positionId = in.readByte() == 0x00 ? null : in.readLong();
-        dataId = in.readByte() == 0x00 ? null : in.readLong();
     }
 
     @Override
@@ -160,12 +155,6 @@ public class Device extends RealmObject implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeLong(positionId);
         }
-        if (dataId == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeLong(dataId);
-        }
     }
 
     @SuppressWarnings("unused")
@@ -190,7 +179,6 @@ public class Device extends RealmObject implements Parcelable {
                 ", status='" + status + '\'' +
                 ", lastUpdate=" + lastUpdate +
                 ", positionId=" + positionId +
-                ", dataId=" + dataId +
                 '}';
     }
 }

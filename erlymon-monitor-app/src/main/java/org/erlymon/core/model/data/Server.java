@@ -24,6 +24,8 @@ import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -31,72 +33,86 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
+@StorIOSQLiteType(table = ServersTable.TABLE)
 public class Server extends RealmObject implements Parcelable {
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_ID, key = true)
     @PrimaryKey
     @SerializedName("id")
     @Expose
-    private long id;
+    long id;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_REGISTRATION)
     @Since(3.0)
     @SerializedName("registration")
     @Expose
-    private Boolean registration;
+    Boolean registration;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_LATITUDE)
     @Since(3.0)
     @SerializedName("latitude")
     @Expose
-    private Double latitude;
+    Double latitude;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_LONGITUDE)
     @Since(3.0)
     @SerializedName("longitude")
     @Expose
-    private Double longitude;
+    Double longitude;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_ZOOM)
     @Since(3.0)
     @SerializedName("zoom")
     @Expose
-    private Integer zoom;
+    Integer zoom;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_MAP)
     @Since(3.1)
     @SerializedName("map")
     @Expose
-    private String map;
+    String map;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_LANGUAGE)
     @Since(3.1)
     @SerializedName("language")
     @Expose
-    private String language;
+    String language;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_DISTANCE_UNIT)
     @Since(3.1)
     @SerializedName("distanceUnit")
     @Expose
-    private String distanceUnit;
+    String distanceUnit;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_SPEED_UNIT)
     @Since(3.1)
     @SerializedName("speedUnit")
     @Expose
-    private String speedUnit;
+    String speedUnit;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_BING_KEY)
     @Since(3.2)
     @SerializedName("bingKey")
     @Expose
-    private String bingKey;
+    String bingKey;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_MAP_URL)
     @Since(3.2)
     @SerializedName("mapUrl")
     @Expose
-    private String mapUrl;
+    String mapUrl;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_READONLY)
     @Since(3.4)
     @SerializedName("readonly")
     @Expose
-    private Boolean readonly;
+    Boolean readonly;
 
+    @StorIOSQLiteColumn(name = ServersTable.COLUMN_TWELVE_HOUR_FORMAT)
     @Since(3.5)
     @SerializedName("twelveHourFormat")
     @Expose
-    private Boolean twelveHourFormat;
+    Boolean twelveHourFormat;
 
     public Server() {}
     /**

@@ -32,6 +32,7 @@ import com.facebook.stetho.Stetho
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import org.erlymon.core.model.api.ApiModule
+import org.erlymon.core.model.data.StorageModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -54,6 +55,7 @@ class MainApp : MultiDexApplication() {
                 .build()
         Realm.setDefaultConfiguration(realmConfiguration)
 
+        StorageModule.getInstance().init(baseContext)
         ApiModule.getInstance().init(applicationContext, MainPref.dns, MainPref.sslOrTls, MainPref.protocolVersion.toDouble())
     }
 

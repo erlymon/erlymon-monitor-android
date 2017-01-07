@@ -24,6 +24,8 @@ import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -31,76 +33,92 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
+@StorIOSQLiteType(table = UsersTable.TABLE)
 public class User extends RealmObject implements Parcelable {
+
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_ID, key = true)
     @PrimaryKey
     @SerializedName("id")
     @Expose
-    private long id;
+    long id;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_NAME)
     @Since(3.0)
     @SerializedName("name")
     @Expose
-    private String name;
+    String name;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_EMAIL)
     @Since(3.0)
     @SerializedName("email")
     @Expose
-    private String email;
+    String email;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_PASSWORD)
     @Since(3.0)
     @SerializedName("password")
     @Expose
-    private String password;
+    String password;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_ADMIN)
     @Since(3.0)
     @SerializedName("admin")
     @Expose
-    private Boolean admin;
+    Boolean admin;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_MAP)
     @Since(3.1)
     @SerializedName("map")
     @Expose
-    private String map;
+    String map;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_LANGUAGE)
     @Since(3.1)
     @SerializedName("language")
     @Expose
-    private String language;
+    String language;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_DISTANCE_UNIT)
     @Since(3.1)
     @SerializedName("distanceUnit")
     @Expose
-    private String distanceUnit;
+    String distanceUnit;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_SPEED_UNIT)
     @Since(3.1)
     @SerializedName("speedUnit")
     @Expose
-    private String speedUnit;
+    String speedUnit;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_LATITUDE)
     @Since(3.1)
     @SerializedName("latitude")
     @Expose
-    private Double latitude;
+    Double latitude;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_LONGITUDE)
     @Since(3.1)
     @SerializedName("longitude")
     @Expose
-    private Double longitude;
+    Double longitude;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_ZOOM)
     @Since(3.1)
     @SerializedName("zoom")
     @Expose
-    private Integer zoom;
+    Integer zoom;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_READONLY)
     @Since(3.4)
     @SerializedName("readonly")
     @Expose
-    private Boolean readonly;
+    Boolean readonly;
 
+    @StorIOSQLiteColumn(name = UsersTable.COLUMN_TWELVE_HOUR_FORMAT)
     @Since(3.5)
     @SerializedName("twelveHourFormat")
     @Expose
-    private Boolean twelveHourFormat;
+    Boolean twelveHourFormat;
 
     public User() {}
     /**
