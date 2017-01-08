@@ -25,15 +25,20 @@ import android.util.Log;
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
 import org.erlymon.core.model.data.Device;
+import org.erlymon.core.model.data.DevicesTable;
+import org.erlymon.core.model.data.StorageModule;
 import org.erlymon.core.view.DevicesListView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
 /**
@@ -42,7 +47,6 @@ import rx.subscriptions.Subscriptions;
 public class DevicesListPresenterImpl implements DevicesListPresenter {
     private static final Logger logger = LoggerFactory.getLogger(DevicesListPresenterImpl.class);
     private Model model;
-    private Realm realmdb;
 
     private DevicesListView view;
     private Subscription subscription = Subscriptions.empty();
@@ -50,7 +54,6 @@ public class DevicesListPresenterImpl implements DevicesListPresenter {
     public DevicesListPresenterImpl(Context context, DevicesListView view) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
@@ -59,10 +62,16 @@ public class DevicesListPresenterImpl implements DevicesListPresenter {
             subscription.unsubscribe();
         }
 
-        subscription = realmdb.where(Device.class).findAllSortedAsync("name").asObservable()
-                .subscribeOn(AndroidSchedulers.mainThread())
+        subscription = StorageModule.getInstance().getStorage()
+                .get()
+                .listOfObjects(Device.class)
+                .withQuery(DevicesTable.QUERY_ALL)
+                .prepare()
+                .asRxObservable()
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<RealmResults<Device>>() {
+                .subscribe(new Observer<List<Device>>() {
                     @Override
                     public void onCompleted() {
 
@@ -70,14 +79,12 @@ public class DevicesListPresenterImpl implements DevicesListPresenter {
 
                     @Override
                     public void onError(Throwable e) {
-                        logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
                     @Override
-                    public void onNext(RealmResults<Device> data) {
-                        logger.debug(data.toString());
-                        view.showData(data);
+                    public void onNext(List<Device> devices) {
+                        view.showData(devices);
                     }
                 });
     }
@@ -86,10 +93,6 @@ public class DevicesListPresenterImpl implements DevicesListPresenter {
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
     }
 }

@@ -24,16 +24,19 @@ import android.util.Log;
 
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
+import org.erlymon.core.model.data.StorageModule;
 import org.erlymon.core.model.data.User;
+import org.erlymon.core.model.data.UsersTable;
 import org.erlymon.core.view.UsersListView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.realm.Realm;
-import io.realm.RealmResults;
+import java.util.List;
+
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
 /**
@@ -42,7 +45,6 @@ import rx.subscriptions.Subscriptions;
 public class UsersListPresenterImpl implements UsersListPresenter {
     private static final Logger logger = LoggerFactory.getLogger(UsersListPresenterImpl.class);
     private Model model;
-    private Realm realmdb;
 
     private UsersListView view;
     private Subscription subscription = Subscriptions.empty();
@@ -50,7 +52,6 @@ public class UsersListPresenterImpl implements UsersListPresenter {
     public UsersListPresenterImpl(Context context, UsersListView view) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
@@ -59,10 +60,16 @@ public class UsersListPresenterImpl implements UsersListPresenter {
             subscription.unsubscribe();
         }
 
-        subscription = realmdb.where(User.class).findAllSortedAsync("name").asObservable()
-                .subscribeOn(AndroidSchedulers.mainThread())
+        subscription = StorageModule.getInstance().getStorage()
+                .get()
+                .listOfObjects(User.class)
+                .withQuery(UsersTable.QUERY_ALL)
+                .prepare()
+                .asRxObservable()
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<RealmResults<User>>() {
+                .subscribe(new Observer<List<User>>() {
                     @Override
                     public void onCompleted() {
 
@@ -70,14 +77,12 @@ public class UsersListPresenterImpl implements UsersListPresenter {
 
                     @Override
                     public void onError(Throwable e) {
-                        logger.error(Log.getStackTraceString(e));
                         view.showError(e.getMessage());
                     }
 
                     @Override
-                    public void onNext(RealmResults<User> data) {
-                        logger.debug(data.toString());
-                        view.showData(data);
+                    public void onNext(List<User> users) {
+                        view.showData(users);
                     }
                 });
     }
@@ -86,10 +91,6 @@ public class UsersListPresenterImpl implements UsersListPresenter {
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
     }
 }

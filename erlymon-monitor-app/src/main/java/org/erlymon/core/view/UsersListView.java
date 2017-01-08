@@ -20,11 +20,11 @@ package org.erlymon.core.view;
 
 import org.erlymon.core.model.data.User;
 
-import io.realm.RealmResults;
+import java.util.List;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
 public interface UsersListView extends View {
-    void showData(RealmResults<User> data);
+    void showData(List<User> users);
 }

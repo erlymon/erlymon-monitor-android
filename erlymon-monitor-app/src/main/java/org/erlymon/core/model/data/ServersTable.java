@@ -21,6 +21,9 @@ package org.erlymon.core.model.data;
 import android.support.annotation.NonNull;
 
 import com.pushtorefresh.storio.sqlite.queries.Query;
+import com.pushtorefresh.storio.sqlite.queries.RawQuery;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by sergey on 1/7/17.
@@ -76,6 +79,11 @@ public class ServersTable {
             .table(TABLE)
             .build();
 
+    @NotNull
+    public static final RawQuery QUERY_DROP = RawQuery.builder()
+            .query("DELETE FROM " + TABLE + ";")
+            .build();
+
     // This is just class with Meta Data, we don't need instances
     private ServersTable() {
         throw new IllegalStateException("No instances please");
@@ -89,7 +97,7 @@ public class ServersTable {
                 + COLUMN_LATITUDE + " REAL NOT NULL, "
                 + COLUMN_LONGITUDE + " REAL NOT NULL, "
                 + COLUMN_ZOOM + " INTEGER NOT NULL, "
-                + COLUMN_MAP+ " STRING DEFAULT NULL, "
+                + COLUMN_MAP + " STRING DEFAULT NULL, "
                 + COLUMN_LANGUAGE + " STRING NOT NULL, "
                 + COLUMN_DISTANCE_UNIT + " STRING DEFAULT NULL, "
                 + COLUMN_SPEED_UNIT + " STRING DEFAULT NULL, "

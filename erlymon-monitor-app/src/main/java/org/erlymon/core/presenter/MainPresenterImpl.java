@@ -23,22 +23,27 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.util.Log;
 
+import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
+import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
+import com.pushtorefresh.storio.sqlite.queries.Query;
+
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
-import org.erlymon.core.model.data.Device;
+import org.erlymon.core.model.data.DevicesTable;
 import org.erlymon.core.model.data.Position;
-import org.erlymon.core.model.data.User;
+import org.erlymon.core.model.data.ServersTable;
+import org.erlymon.core.model.data.StorageModule;
+import org.erlymon.core.model.data.UsersTable;
 import org.erlymon.core.view.MainView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.realm.Realm;
-import io.realm.RealmObject;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
+import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -48,7 +53,6 @@ import rx.subscriptions.Subscriptions;
 public class MainPresenterImpl implements MainPresenter {
     private static final Logger logger = LoggerFactory.getLogger(MainPresenterImpl.class);
     private Model model;
-    private Realm realmdb;
 
     private ProgressDialog progressDialog;
     private MainView view;
@@ -57,7 +61,6 @@ public class MainPresenterImpl implements MainPresenter {
     public MainPresenterImpl(Context context, MainView view, int progressMessageId) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
         this.progressDialog = new ProgressDialog(context);
         this.progressDialog.setMessage(context.getString(progressMessageId));
     }
@@ -71,9 +74,42 @@ public class MainPresenterImpl implements MainPresenter {
 
         progressDialog.show();
         subscription = model.deleteSession()
+                .flatMap(new Func1<Void, Observable<Void>>() {
+                    @Override
+                    public Observable<Void> call(Void aVoid) {
+                        Observable<Object> serverObserver = StorageModule.getInstance().getStorage()
+                                .executeSQL()
+                                .withQuery(ServersTable.QUERY_DROP)
+                                .prepare()
+                                .asRxObservable();
+
+                        Observable<Object> usersObserver = StorageModule.getInstance().getStorage()
+                                .executeSQL()
+                                .withQuery(UsersTable.QUERY_DROP)
+                                .prepare()
+                                .asRxObservable();
+
+                        Observable<Object> devicesObserver = StorageModule.getInstance().getStorage()
+                                .executeSQL()
+                                .withQuery(DevicesTable.QUERY_DROP)
+                                .prepare()
+                                .asRxObservable();
+
+                        return Observable.zip(
+                                serverObserver,
+                                usersObserver,
+                                devicesObserver,
+                                new Func3<Object, Object, Object, Void>() {
+                                    @Override
+                                    public Void call(Object o, Object o2, Object o3) {
+                                        return null;
+                                    }
+                                }
+                        );
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(o -> realmdb.executeTransactionAsync(realm -> realm.deleteAll()))
                 .subscribe(new Observer<Void>() {
                     @Override
                     public void onCompleted() {
@@ -102,15 +138,28 @@ public class MainPresenterImpl implements MainPresenter {
         }
 
         subscription = model.deleteDevice(view.getDeviceId())
+                .flatMap(new Func1<Void, Observable<Void>>() {
+                    @Override
+                    public Observable<Void> call(Void aVoid) {
+                        return StorageModule.getInstance().getStorage()
+                                .delete()
+                                .byQuery(DeleteQuery.builder()
+                                        .table(DevicesTable.TABLE)
+                                        .where("id = ?")
+                                        .whereArgs(view.getDeviceId()) // No need to write String.valueOf()
+                                        .build())
+                                .prepare()
+                                .asRxObservable()
+                                .map(new Func1<DeleteResult, Void>() {
+                                    @Override
+                                    public Void call(DeleteResult deleteResult) {
+                                        return null;
+                                    }
+                                });
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(o -> realmdb.executeTransaction(realm -> {
-                        try {
-                            realm.where(Device.class).equalTo("id", view.getDeviceId()).findFirst().deleteFromRealm();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                }))
                 .subscribe(new Observer<Void>() {
                     @Override
                     public void onCompleted() {
@@ -137,15 +186,28 @@ public class MainPresenterImpl implements MainPresenter {
         }
 
         subscription = model.deleteUser(view.getUserId())
+                .flatMap(new Func1<Void, Observable<Void>>() {
+                    @Override
+                    public Observable<Void> call(Void aVoid) {
+                        return StorageModule.getInstance().getStorage()
+                                .delete()
+                                .byQuery(DeleteQuery.builder()
+                                        .table(UsersTable.TABLE)
+                                        .where("id = ?")
+                                        .whereArgs(view.getUserId()) // No need to write String.valueOf()
+                                        .build())
+                                .prepare()
+                                .asRxObservable()
+                                .map(new Func1<DeleteResult, Void>() {
+                                    @Override
+                                    public Void call(DeleteResult deleteResult) {
+                                        return null;
+                                    }
+                                });
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(o -> realmdb.executeTransaction(realm -> {
-                    try {
-                        realm.where(User.class).equalTo("id", view.getUserId()).findFirst().deleteFromRealm();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }))
                 .subscribe(new Observer<Void>() {
                     @Override
                     public void onCompleted() {
@@ -195,47 +257,45 @@ public class MainPresenterImpl implements MainPresenter {
 
     @Override
     public void onGetPostionByCache() {
-        try {
-            if (!subscription.isUnsubscribed()) {
-                subscription.unsubscribe();
-            }
-
-            subscription = realmdb.where(Position.class).equalTo("id", view.getPositionId()).findFirst().asObservable()
-                    .flatMap((Func1<RealmObject, Observable<Position>>) realmObject -> realmObject.asObservable())
-                    .subscribeOn(AndroidSchedulers.mainThread())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Position>() {
-                        @Override
-                        public void onCompleted() {
-
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            logger.error(Log.getStackTraceString(e));
-                            view.showError(e.getMessage());
-                        }
-
-                        @Override
-                        public void onNext(Position data) {
-                            logger.debug(data.toString());
-                            view.showPosition(data);
-                        }
-                    });
-        } catch (NullPointerException e) {
-            logger.error(Log.getStackTraceString(e));
-            view.showError(e.getMessage());
+        if (!subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
         }
+
+        subscription = StorageModule.getInstance().getStorage()
+                .get()
+                .object(Position.class)
+                .withQuery(Query.builder() // Query builder
+                        .table("positions")
+                        .where("id = ?")
+                        .whereArgs(view.getPositionId())
+                        .build())
+                .prepare()
+                .asRxObservable()
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Position>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        view.showError(e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(Position position) {
+                        view.showPosition(position);
+                    }
+                });
     }
 
     @Override
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
 
         if (progressDialog.isShowing()) {

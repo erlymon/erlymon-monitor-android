@@ -20,11 +20,11 @@ package org.erlymon.core.view;
 
 import org.erlymon.core.model.data.Device;
 
-import io.realm.RealmResults;
+import java.util.List;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
 public interface DevicesListView extends View {
-    void showData(RealmResults<Device> data);
+    void showData(List<Device> devices);
 }
