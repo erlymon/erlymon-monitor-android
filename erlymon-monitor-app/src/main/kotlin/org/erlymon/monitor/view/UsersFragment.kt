@@ -20,15 +20,11 @@ package org.erlymon.monitor.view
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.widget.PopupMenu
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import io.realm.RealmResults
-import org.slf4j.LoggerFactory
-
 import kotlinx.android.synthetic.main.fragment_users.*
 import org.erlymon.core.model.data.User
 import org.erlymon.core.presenter.UsersListPresenter
@@ -36,6 +32,7 @@ import org.erlymon.core.presenter.UsersListPresenterImpl
 import org.erlymon.core.view.UsersListView
 import org.erlymon.monitor.R
 import org.erlymon.monitor.view.adapter.UsersAdapter
+import org.slf4j.LoggerFactory
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
@@ -76,16 +73,11 @@ class UsersFragment : BaseFragment<UsersListPresenter>(), UsersListView {
         super.onViewCreated(view, savedInstanceState)
 
         presenter = UsersListPresenterImpl(context, this)
-        //lv_users.adapter = UsersAdapter(context, storage.getUsersSorted())
-        lv_users.onItemClickListener = object : AdapterView.OnItemClickListener {
-            override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
-                val user = lv_users.getItemAtPosition(position) as User
-                val popupMenu = PopupMenu(context, view)
-                popupMenu.inflate(R.menu.fragment_users_popupmenu)
-                popupMenu.setOnMenuItemClickListener(OnExecPopupMenuItem(user))
-                popupMenu.show()
-            }
-        }
+
+        rv_users.layoutManager = LinearLayoutManager(context)
+        rv_users.setHasFixedSize(true)
+
+        rv_users.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     }
 
     override fun onResume() {
@@ -93,36 +85,12 @@ class UsersFragment : BaseFragment<UsersListPresenter>(), UsersListView {
         presenter?.onLoadUsersCache()
     }
 
-    override fun showData(data: RealmResults<User>) {
-        lv_users.adapter = UsersAdapter(context, data)
+    override fun showData(data: List<User>) {
+        rv_users.adapter = UsersAdapter(context, data)
     }
 
     override fun showError(error: String) {
-       makeToast(lv_users, error)
-    }
-
-    private inner class OnExecPopupMenuItem(internal var user: User) : PopupMenu.OnMenuItemClickListener {
-
-        override fun onMenuItemClick(item: MenuItem): Boolean {
-            // Toast.makeText(PopupMenuDemoActivity.this,
-            // item.toString(), Toast.LENGTH_LONG).show();
-            // return true;
-            when (item.itemId) {
-                R.id.action_user_edit -> {
-                    listener!!.onEditUser(user)
-                    return true
-                }
-                R.id.action_user_remove -> {
-                    listener!!.onRemoveUser(user)
-                    return true
-                }
-                R.id.action_user_devices -> {
-                    listener!!.onPermissionForUser(user)
-                    return true
-                }
-                else -> return false
-            }
-        }
+       makeToast(rv_users, error)
     }
 
     companion object {

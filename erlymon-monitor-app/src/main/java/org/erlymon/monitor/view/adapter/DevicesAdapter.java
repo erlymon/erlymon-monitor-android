@@ -19,58 +19,86 @@
 package org.erlymon.monitor.view.adapter;
 
 import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import org.erlymon.core.model.data.Device;
 import org.erlymon.monitor.R;
 
-import io.realm.OrderedRealmCollection;
-import io.realm.RealmBaseAdapter;
+import java.util.List;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 1/7/16.
  */
-public class DevicesAdapter extends RealmBaseAdapter<Device> implements ListAdapter {
+public class DevicesAdapter extends BaseAdapter<Device, DevicesAdapter.MyViewHolder> {
+    private OnDevicesClickListener mListener;
 
-    public DevicesAdapter(Context context, OrderedRealmCollection<Device> data) {
+    public DevicesAdapter(Context context, List<Device> data) {
         super(context, data);
     }
 
-    /**
-     * Реализация класса ViewHolder, хранящего ссылки на виджеты.
-     */
-    class ViewHolder {
-        private GridLayout layout;
-        private TextView name;
-        private TextView identifier;
-
-        public ViewHolder(View itemView) {
-            layout = (GridLayout) itemView.findViewById(R.id.layout);
-            name = (TextView) itemView.findViewById(R.id.name);
-            identifier = (TextView) itemView.findViewById(R.id.identifier);
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        try {
+            // Instantiate the NoticeDialogListener so we can send events to the host
+            mListener = (OnDevicesClickListener) recyclerView.getContext();
+        } catch (ClassCastException e) {
+            // The activity doesn't implement the interface, throw exception
+            throw new ClassCastException(recyclerView.getContext().toString() + " must implement DevicesAdapter.OnUsersClickListener");
         }
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder viewHolder;
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.list_device,  parent, false);
-            viewHolder = new ViewHolder(convertView);
-            convertView.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) convertView.getTag();
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        mListener = null;
+        super.onDetachedFromRecyclerView(recyclerView);
+    }
+
+    @Override
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = inflater.inflate(R.layout.list_device, parent, false);
+        return new MyViewHolder(itemView);
+    }
+
+    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        Device obj = getData().get(position);
+        holder.bind(obj);
+    }
+
+    class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private GridLayout layout;
+        private TextView name;
+        private TextView identifier;
+        private Device data;
+
+
+        MyViewHolder(View view) {
+            super(view);
+            layout = (GridLayout) view.findViewById(R.id.layout);
+            name = (TextView) view.findViewById(R.id.name);
+            identifier = (TextView) view.findViewById(R.id.identifier);
+            layout.setOnClickListener(this);
         }
 
-        Device item = adapterData.get(position);
-        viewHolder.name.setText(item.getName());
-        viewHolder.identifier.setText(item.getUniqueId());
-        viewHolder.layout.setBackgroundResource(getStatusColorId(item.getStatus()));
-        return convertView;
+        void bind(Device data) {
+            this.data = data;
+
+            name.setText(data.getName());
+            identifier.setText(data.getUniqueId());
+            layout.setBackgroundResource(getStatusColorId(data.getStatus()));
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (mListener != null) {
+                mListener.onDeviceClick(v, data);
+            }
+        }
     }
 
     private int getStatusColorId(String status) {
@@ -80,5 +108,9 @@ public class DevicesAdapter extends RealmBaseAdapter<Device> implements ListAdap
             case "unknown": return R.color.colorUnknownStatus;
             default: return R.color.colorUnknownStatus;
         }
+    }
+
+    public interface OnDevicesClickListener {
+        void onDeviceClick(View view, Device device);
     }
 }

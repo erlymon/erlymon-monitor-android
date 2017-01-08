@@ -25,13 +25,13 @@ import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.ActionBarDrawerToggle
+import android.support.v7.widget.PopupMenu
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import io.realm.RealmResults
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -46,14 +46,15 @@ import org.erlymon.monitor.view.adapter.UsersAdapter
 import org.erlymon.monitor.view.fragment.ConfirmDialogFragment
 import org.erlymon.monitor.view.fragment.SendCommandDialogFragment
 import org.osmdroid.util.GeoPoint
-
 import org.slf4j.LoggerFactory
 
 class MainActivity : BaseActivity<MainPresenter>(),
         MainView,
         NavigationView.OnNavigationItemSelectedListener,
         DevicesFragment.OnActionDeviceListener,
+        DevicesAdapter.OnDevicesClickListener,
         UsersFragment.OnActionUserListener,
+        UsersAdapter.OnUsersClickListener,
         ConfirmDialogFragment.ConfirmDialogListener,
         SendCommandDialogFragment.SendCommandDialogListener {
 
@@ -259,6 +260,20 @@ class MainActivity : BaseActivity<MainPresenter>(),
         }
     }
 
+    override fun onDeviceClick(view: View, device: Device) {
+        val popupMenu = PopupMenu(this@MainActivity, view)
+        popupMenu.inflate(R.menu.fragment_devices_popupmenu)
+        popupMenu.setOnMenuItemClickListener(OnExecDevicePopupMenu(device))
+        popupMenu.show()
+    }
+
+    override fun onUserClick(view: View, user: User) {
+        val popupMenu = PopupMenu(this@MainActivity, view)
+        popupMenu.inflate(R.menu.fragment_users_popupmenu)
+        popupMenu.setOnMenuItemClickListener(OnExecUserPopupMenu(user))
+        popupMenu.show()
+    }
+
     override fun onEditDevice(device: Device) {
         val intent = Intent(this@MainActivity, DeviceActivity::class.java)
                 .putExtra("session", intent.getParcelableExtra<User>("session"))
@@ -335,6 +350,62 @@ class MainActivity : BaseActivity<MainPresenter>(),
             return Pair(GeoPoint(user.latitude, user.longitude), user.zoom)
         }
         return Pair(GeoPoint(0, 0), 0)
+    }
+
+    private inner class OnExecDevicePopupMenu(internal var device: Device) : PopupMenu.OnMenuItemClickListener {
+
+        override fun onMenuItemClick(item: MenuItem): Boolean {
+            // Toast.makeText(PopupMenuDemoActivity.this,
+            // item.toString(), Toast.LENGTH_LONG).show();
+            // return true;
+            when (item.itemId) {
+                R.id.action_device_edit -> {
+                    onEditDevice(device)
+                    return true
+                }
+                R.id.action_device_remove -> {
+                    onRemoveDevice(device)
+                    return true
+                }
+                R.id.action_device_positions -> {
+                    onLoadPositions(device)
+                    return true
+                }
+                R.id.action_show_on_map -> {
+                    onShowOnMap(device)
+                    return true
+                }
+                R.id.action_send_command -> {
+                    onSendCommand(device)
+                    return true
+                }
+                else -> return false
+            }
+        }
+    }
+
+    private inner class OnExecUserPopupMenu(internal var user: User) : PopupMenu.OnMenuItemClickListener {
+
+        override fun onMenuItemClick(item: MenuItem): Boolean {
+            // Toast.makeText(PopupMenuDemoActivity.this,
+            // item.toString(), Toast.LENGTH_LONG).show();
+            // return true;
+            when (item.itemId) {
+                R.id.action_user_edit -> {
+                    onEditUser(user)
+                    return true
+                }
+                R.id.action_user_remove -> {
+                    onRemoveUser(user)
+                    return true
+                }
+                R.id.action_user_devices -> {
+                    onPermissionForUser(user)
+                    return true
+                }
+                else -> return false
+            }
+        }
     }
 
     companion object {

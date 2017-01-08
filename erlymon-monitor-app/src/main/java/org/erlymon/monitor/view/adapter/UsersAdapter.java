@@ -19,55 +19,83 @@
 package org.erlymon.monitor.view.adapter;
 
 import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import org.erlymon.core.model.data.User;
 import org.erlymon.monitor.R;
 
-import io.realm.OrderedRealmCollection;
-import io.realm.RealmBaseAdapter;
+import java.util.List;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 1/7/16.
  */
-public class UsersAdapter extends RealmBaseAdapter<User> implements ListAdapter {
+public class UsersAdapter extends BaseAdapter<User, UsersAdapter.MyViewHolder> {
+    private OnUsersClickListener mListener;
 
-    public UsersAdapter(Context context, OrderedRealmCollection<User> data) {
+    public UsersAdapter(Context context, List<User> data) {
         super(context, data);
     }
 
-    /**
-     * Реализация класса ViewHolder, хранящего ссылки на виджеты.
-     */
-    class ViewHolder {
-        private TextView name;
-        private TextView email;
-
-        public ViewHolder(View itemView) {
-            name = (TextView) itemView.findViewById(R.id.name);
-            email = (TextView) itemView.findViewById(R.id.email);
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        try {
+            // Instantiate the NoticeDialogListener so we can send events to the host
+            mListener = (OnUsersClickListener) recyclerView.getContext();
+        } catch (ClassCastException e) {
+            // The activity doesn't implement the interface, throw exception
+            throw new ClassCastException(recyclerView.getContext().toString() + " must implement UsersAdapter.OnUsersClickListener");
         }
     }
-
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder viewHolder;
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.list_user,  parent, false);
-            viewHolder = new ViewHolder(convertView);
-            convertView.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) convertView.getTag();
-        }
-
-        User item = adapterData.get(position);
-        viewHolder.name.setText(item.getName());
-        viewHolder.email.setText(item.getEmail());
-        return convertView;
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        mListener = null;
+        super.onDetachedFromRecyclerView(recyclerView);
     }
 
+    @Override
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = inflater.inflate(R.layout.list_user, parent, false);
+        return new MyViewHolder(itemView);
+    }
+
+    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        User obj = getData().get(position);
+        holder.bind(obj);
+    }
+
+    class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private TextView name;
+        private TextView email;
+        private User data;
+
+
+        MyViewHolder(View view) {
+            super(view);
+            name = (TextView) view.findViewById(R.id.name);
+            email = (TextView) view.findViewById(R.id.email);
+        }
+
+        void bind(User data) {
+            this.data = data;
+            name.setText(data.getName());
+            email.setText(data.getEmail());
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (mListener != null) {
+                mListener.onUserClick(v, data);
+            }
+        }
+    }
+
+    public interface OnUsersClickListener {
+        void onUserClick(View view, User user);
+    }
 }

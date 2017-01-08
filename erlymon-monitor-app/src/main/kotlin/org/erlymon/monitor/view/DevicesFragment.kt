@@ -20,15 +20,11 @@ package org.erlymon.monitor.view
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.widget.PopupMenu
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import io.realm.RealmResults
-import org.slf4j.LoggerFactory
-
 import kotlinx.android.synthetic.main.fragment_devices.*
 import org.erlymon.core.model.data.Device
 import org.erlymon.core.presenter.DevicesListPresenter
@@ -36,6 +32,7 @@ import org.erlymon.core.presenter.DevicesListPresenterImpl
 import org.erlymon.core.view.DevicesListView
 import org.erlymon.monitor.R
 import org.erlymon.monitor.view.adapter.DevicesAdapter
+import org.slf4j.LoggerFactory
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 4/7/16.
@@ -79,16 +76,10 @@ class DevicesFragment : BaseFragment<DevicesListPresenter>(), DevicesListView {
 
         presenter = DevicesListPresenterImpl(context, this)
 
-        //lv_devices.adapter = DevicesAdapter(context, storage.devicesSorted)
-        lv_devices.onItemClickListener = object : AdapterView.OnItemClickListener {
-            override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
-                val device = lv_devices.getItemAtPosition(position) as Device
-                val popupMenu = PopupMenu(context, view)
-                popupMenu.inflate(R.menu.fragment_devices_popupmenu)
-                popupMenu.setOnMenuItemClickListener(OnExecPopupMenuItem(device))
-                popupMenu.show()
-            }
-        }
+        rv_devices.layoutManager = LinearLayoutManager(context)
+        rv_devices.setHasFixedSize(true)
+
+        rv_devices.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     }
 
     override fun onResume() {
@@ -96,44 +87,12 @@ class DevicesFragment : BaseFragment<DevicesListPresenter>(), DevicesListView {
         presenter?.onLoadDevicesCache()
     }
 
-    override fun showData(data: RealmResults<Device>) {
-        lv_devices.adapter = DevicesAdapter(context, data)
+    override fun showData(devices: List<Device>) {
+        rv_devices.adapter = DevicesAdapter(context, devices)
     }
 
     override fun showError(error: String) {
-        makeToast(lv_devices, error)
-    }
-
-    private inner class OnExecPopupMenuItem(internal var device: Device) : PopupMenu.OnMenuItemClickListener {
-
-        override fun onMenuItemClick(item: MenuItem): Boolean {
-            // Toast.makeText(PopupMenuDemoActivity.this,
-            // item.toString(), Toast.LENGTH_LONG).show();
-            // return true;
-            when (item.itemId) {
-                R.id.action_device_edit -> {
-                    listener!!.onEditDevice(device)
-                    return true
-                }
-                R.id.action_device_remove -> {
-                    listener!!.onRemoveDevice(device)
-                    return true
-                }
-                R.id.action_device_positions -> {
-                    listener!!.onLoadPositions(device)
-                    return true
-                }
-                R.id.action_show_on_map -> {
-                    listener!!.onShowOnMap(device)
-                    return true
-                }
-                R.id.action_send_command -> {
-                    listener!!.onSendCommand(device)
-                    return true
-                }
-                else -> return false
-            }
-        }
+        makeToast(rv_devices, error)
     }
 
     companion object {
