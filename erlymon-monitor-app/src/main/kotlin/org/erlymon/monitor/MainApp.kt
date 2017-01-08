@@ -18,7 +18,6 @@
  */
 package org.erlymon.monitor
 
-import android.app.Application
 import android.support.multidex.MultiDexApplication
 import android.text.format.DateFormat
 import android.util.Log
@@ -45,14 +44,15 @@ class MainApp : MultiDexApplication() {
     override fun onCreate() {
         super.onCreate()
         initLoggerSystem()
-        Stetho.initializeWithDefaults(this);
+        Stetho.initializeWithDefaults(this)
         Kotpref.init(baseContext)
 
-        Realm.setDefaultConfiguration(RealmConfiguration.Builder(baseContext)
+        Realm.init(this)
+        val realmConfiguration = RealmConfiguration.Builder()
                 .deleteRealmIfMigrationNeeded()
                 .name("erlymon-monitor-storage.realm")
                 .build()
-        )
+        Realm.setDefaultConfiguration(realmConfiguration)
 
         ApiModule.getInstance().init(applicationContext, MainPref.dns, MainPref.sslOrTls, MainPref.protocolVersion.toDouble())
     }
