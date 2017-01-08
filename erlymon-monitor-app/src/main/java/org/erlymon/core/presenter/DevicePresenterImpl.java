@@ -22,17 +22,22 @@ package org.erlymon.core.presenter;
 import android.content.Context;
 import android.util.Log;
 
+import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
 import org.erlymon.core.model.data.Device;
+import org.erlymon.core.model.data.StorageModule;
 import org.erlymon.core.view.DeviceView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.realm.Realm;
+import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -42,7 +47,6 @@ import rx.subscriptions.Subscriptions;
 public class DevicePresenterImpl implements DevicePresenter {
     private static final Logger logger = LoggerFactory.getLogger(DevicePresenterImpl.class);
     private Model model;
-    private Realm realmdb;
 
     private DeviceView view;
     private Subscription subscription = Subscriptions.empty();
@@ -50,7 +54,6 @@ public class DevicePresenterImpl implements DevicePresenter {
     public DevicePresenterImpl(Context context, DeviceView view) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
@@ -62,9 +65,20 @@ public class DevicePresenterImpl implements DevicePresenter {
 
         if (view.getDeviceId() == 0) {
             subscription = model.createDevice(view.getDevice())
+                    .flatMap(new Func1<Device, Observable<Device>>() {
+                        @Override
+                        public Observable<Device> call(Device device) {
+                            return StorageModule.getInstance().getStorage()
+                                    .put()
+                                    .object(device)
+                                    .prepare()
+                                    .asRxObservable()
+                                    .map(putResult -> device);
+                        }
+                    })
+                    .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .doOnNext(device -> realmdb.executeTransactionAsync(realm -> realm.copyToRealmOrUpdate(device)))
                     .subscribe(new Observer<Device>() {
                         @Override
                         public void onCompleted() {
@@ -84,9 +98,20 @@ public class DevicePresenterImpl implements DevicePresenter {
                     });
         } else {
             subscription = model.updateDevice(view.getDeviceId(), view.getDevice())
+                    .flatMap(new Func1<Device, Observable<Device>>() {
+                        @Override
+                        public Observable<Device> call(Device device) {
+                            return StorageModule.getInstance().getStorage()
+                                    .put()
+                                    .object(device)
+                                    .prepare()
+                                    .asRxObservable()
+                                    .map(putResult -> device);
+                        }
+                    })
+                    .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .doOnNext(device -> realmdb.executeTransactionAsync(realm -> realm.copyToRealmOrUpdate(device)))
                     .subscribe(new Observer<Device>() {
                         @Override
                         public void onCompleted() {
@@ -112,10 +137,6 @@ public class DevicePresenterImpl implements DevicePresenter {
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
     }
 }

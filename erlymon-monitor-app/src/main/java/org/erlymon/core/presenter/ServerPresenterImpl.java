@@ -25,14 +25,17 @@ import android.util.Log;
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
 import org.erlymon.core.model.data.Server;
+import org.erlymon.core.model.data.StorageModule;
 import org.erlymon.core.view.ServerView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.realm.Realm;
+import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -42,7 +45,6 @@ import rx.subscriptions.Subscriptions;
 public class ServerPresenterImpl implements ServerPresenter {
     private static final Logger logger = LoggerFactory.getLogger(ServerPresenterImpl.class);
     private Model model;
-    private Realm realmdb;
 
     private ServerView view;
     private Subscription subscription = Subscriptions.empty();
@@ -50,7 +52,6 @@ public class ServerPresenterImpl implements ServerPresenter {
     public ServerPresenterImpl(Context context, ServerView view) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
@@ -61,11 +62,20 @@ public class ServerPresenterImpl implements ServerPresenter {
         }
 
         subscription = model.updateServer(view.getServer())
+                .flatMap(new Func1<Server, Observable<Server>>() {
+                    @Override
+                    public Observable<Server> call(Server server) {
+                        return StorageModule.getInstance().getStorage()
+                                .put()
+                                .object(server)
+                                .prepare()
+                                .asRxObservable()
+                                .map(putResult -> server);
+                    }
+                })
+                .doOnError(throwable -> logger.error(Log.getStackTraceString(throwable)))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(server -> realmdb.executeTransactionAsync(realm -> {
-                    realm.copyToRealmOrUpdate(server);
-                }))
                 .subscribe(new Observer<Server>() {
                     @Override
                     public void onCompleted() {
@@ -89,10 +99,6 @@ public class ServerPresenterImpl implements ServerPresenter {
     public void onStop() {
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
     }
 }
