@@ -21,70 +21,78 @@ package org.erlymon.core.model.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
-import com.google.gson.annotations.Until;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
+import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
+import java.util.Map;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
-public class Position extends RealmObject implements Parcelable {
-    @PrimaryKey
-    private Long id;
+@StorIOSQLiteType(table = PositionsTable.TABLE)
+public class Position implements Parcelable {
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_ID, key = true)
+    Long id;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_PROTOCOL)
     @Since(3.0)
-    private String protocol;
+    String protocol;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_DEVICE_ID)
     @Since(3.0)
-    private Long deviceId;
+    Long deviceId;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_SERVER_TIME)
     @Since(3.0)
-    private Date serverTime;
+    Date serverTime;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_DEVICE_TIME)
     @Since(3.0)
-    private Date deviceTime;
+    Date deviceTime;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_FIX_TIME)
     @Since(3.0)
-    private Date fixTime;
+    Date fixTime;
 
-    private Boolean outdated;
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_OUTDATED)
+    Boolean outdated;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_VALID)
     @Since(3.0)
-    @SerializedName("valid")
-    private Boolean real;
+    Boolean valid;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_LATITUDE)
     @Since(3.0)
-    private Double latitude;
+    Double latitude;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_LONGITUDE)
     @Since(3.0)
-    private Double longitude;
+    Double longitude;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_ALTITUDE)
     @Since(3.0)
-    private Double altitude;
+    Double altitude;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_SPEED)
     @Since(3.0)
-    private Float speed;
+    Float speed;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_COURSE)
     @Since(3.0)
-    private Float course;
+    Float course;
 
+    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_ADDRESS)
     @Since(3.0)
-    private String address;
-/*
-    @Since(3.0)
-    @Until(3.2)
-    private String other;
+    String address;
 
+    //@StorIOSQLiteColumn(name = PositionsTable.COLUMN_ATTRIBUTES)
     @Since(3.2)
-    private String attributes;
-*/
+    Map<String, Object> attributes;
+
     public Position() {
     }
 
@@ -144,12 +152,12 @@ public class Position extends RealmObject implements Parcelable {
         this.outdated = outdated;
     }
 
-    public Boolean getReal() {
-        return real;
+    public Boolean getValid() {
+        return valid;
     }
 
-    public void setReal(Boolean real) {
-        this.real = real;
+    public void setValid(Boolean valid) {
+        this.valid = valid;
     }
 
     public Double getLatitude() {
@@ -199,23 +207,15 @@ public class Position extends RealmObject implements Parcelable {
     public void setAddress(String address) {
         this.address = address;
     }
-/*
-    public String getOther() {
-        return other;
-    }
 
-    public void setOther(String other) {
-        this.other = other;
-    }
-
-    public String getAttributes() {
+    public Map<String, Object> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(String attributes) {
+    public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
     }
-*/
+
     protected Position(Parcel in) {
         id = in.readByte() == 0x00 ? null : in.readLong();
         protocol = in.readString();
@@ -229,14 +229,13 @@ public class Position extends RealmObject implements Parcelable {
         byte outdatedVal = in.readByte();
         outdated = outdatedVal == 0x02 ? null : outdatedVal != 0x00;
         byte realVal = in.readByte();
-        real = realVal == 0x02 ? null : realVal != 0x00;
+        valid = realVal == 0x02 ? null : realVal != 0x00;
         latitude = in.readByte() == 0x00 ? null : in.readDouble();
         longitude = in.readByte() == 0x00 ? null : in.readDouble();
         altitude = in.readByte() == 0x00 ? null : in.readDouble();
         speed = in.readByte() == 0x00 ? null : in.readFloat();
         course = in.readByte() == 0x00 ? null : in.readFloat();
         address = in.readString();
-        //other = in.readString();
         //attributes = in.readString();
     }
 
@@ -268,10 +267,10 @@ public class Position extends RealmObject implements Parcelable {
         } else {
             dest.writeByte((byte) (outdated ? 0x01 : 0x00));
         }
-        if (real == null) {
+        if (valid == null) {
             dest.writeByte((byte) (0x02));
         } else {
-            dest.writeByte((byte) (real ? 0x01 : 0x00));
+            dest.writeByte((byte) (valid ? 0x01 : 0x00));
         }
         if (latitude == null) {
             dest.writeByte((byte) (0x00));
@@ -304,7 +303,6 @@ public class Position extends RealmObject implements Parcelable {
             dest.writeFloat(course);
         }
         dest.writeString(address);
-        //dest.writeString(other);
         //dest.writeString(attributes);
     }
 
@@ -323,7 +321,7 @@ public class Position extends RealmObject implements Parcelable {
 
     public static List<String> createList(Position position) {
         List<String> array = new ArrayList<>();
-        array.add("" + position.getReal());
+        array.add("" + position.getValid());
         array.add("" + position.getFixTime().toString());
         array.add("" + position.getLatitude());
         array.add("" + position.getLongitude());
@@ -343,7 +341,7 @@ public class Position extends RealmObject implements Parcelable {
                 ", deviceTime=" + deviceTime +
                 ", fixTime=" + fixTime +
                 ", outdated=" + outdated +
-                ", real=" + real +
+                ", valid=" + valid +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
                 ", altitude=" + altitude +

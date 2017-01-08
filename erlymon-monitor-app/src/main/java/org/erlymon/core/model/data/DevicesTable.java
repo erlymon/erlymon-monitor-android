@@ -18,12 +18,23 @@
  */
 package org.erlymon.core.model.data;
 
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 
+import com.pushtorefresh.storio.sqlite.SQLiteTypeMapping;
+import com.pushtorefresh.storio.sqlite.operations.delete.DefaultDeleteResolver;
+import com.pushtorefresh.storio.sqlite.operations.get.DefaultGetResolver;
+import com.pushtorefresh.storio.sqlite.operations.put.DefaultPutResolver;
+import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
+import com.pushtorefresh.storio.sqlite.queries.InsertQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 import com.pushtorefresh.storio.sqlite.queries.RawQuery;
+import com.pushtorefresh.storio.sqlite.queries.UpdateQuery;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Date;
 
 /**
  * Created by sergey on 1/7/17.
@@ -75,8 +86,101 @@ public class DevicesTable {
                 + COLUMN_NAME + " STRING NOT NULL, "
                 + COLUMN_UNIQUE_ID + " STRING NOT NULL, "
                 + COLUMN_STATUS + " STRING NOT NULL, "
-                + COLUMN_LAST_UPDATE + " INTEGER NOT NULL, "
+                + COLUMN_LAST_UPDATE + " INTEGER DEFAULT NULL, "
                 + COLUMN_POSITION_ID + " INTEGER DEFAULT NULL"
                 + ");";
+    }
+
+    public static class DeviceSQLiteTypeMapping extends SQLiteTypeMapping<Device> {
+        public DeviceSQLiteTypeMapping() {
+            super(new DeviceStorIOSQLitePutResolver(),
+                    new DeviceStorIOSQLiteGetResolver(),
+                    new DeviceStorIOSQLiteDeleteResolver());
+        }
+    }
+
+    private static class DeviceStorIOSQLitePutResolver extends DefaultPutResolver<Device> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @NonNull
+        public InsertQuery mapToInsertQuery(@NonNull Device object) {
+            return InsertQuery.builder()
+                    .table("devices")
+                    .build();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @NonNull
+        public UpdateQuery mapToUpdateQuery(@NonNull Device object) {
+            return UpdateQuery.builder()
+                    .table("devices")
+                    .where("_id = ?")
+                    .whereArgs(object.id)
+                    .build();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @NonNull
+        public ContentValues mapToContentValues(@NonNull Device object) {
+            ContentValues contentValues = new ContentValues(6);
+
+            contentValues.put("_id", object.id);
+            contentValues.put("name", object.name);
+            contentValues.put("unique_id", object.uniqueId);
+            contentValues.put("status", object.status);
+            contentValues.put("last_update", object.lastUpdate == null ? null : object.lastUpdate.getTime());
+            contentValues.put("position_id", object.positionId);
+
+            return contentValues;
+        }
+    }
+
+    private static  class DeviceStorIOSQLiteGetResolver extends DefaultGetResolver<Device> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @NonNull
+        public Device mapFromCursor(@NonNull Cursor cursor) {
+            Device object = new Device();
+
+            if(!cursor.isNull(cursor.getColumnIndex("_id"))) {
+                object.id = cursor.getLong(cursor.getColumnIndex("_id"));
+            }
+            object.name = cursor.getString(cursor.getColumnIndex("name"));
+            object.uniqueId = cursor.getString(cursor.getColumnIndex("unique_id"));
+            object.status = cursor.getString(cursor.getColumnIndex("status"));
+            if(!cursor.isNull(cursor.getColumnIndex("last_update"))) {
+                object.lastUpdate = new Date(cursor.getLong(cursor.getColumnIndex("last_update")));
+            }
+            if(!cursor.isNull(cursor.getColumnIndex("position_id"))) {
+                object.positionId = cursor.getLong(cursor.getColumnIndex("position_id"));
+            }
+
+            return object;
+        }
+    }
+
+    private static class DeviceStorIOSQLiteDeleteResolver extends DefaultDeleteResolver<Device> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @NonNull
+        public DeleteQuery mapToDeleteQuery(@NonNull Device object) {
+            return DeleteQuery.builder()
+                    .table("devices")
+                    .where("_id = ?")
+                    .whereArgs(object.id)
+                    .build();
+        }
     }
 }

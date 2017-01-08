@@ -88,6 +88,7 @@ public class MapPresenterImpl implements MapPresenter {
                     }
                 }))
                 .observeOn(AndroidSchedulers.mainThread())
+                /*
                 .doOnNext(event -> realmdb.executeTransactionAsync(realm -> {
                     if (event.getPositions() != null) {
                         realm.copyToRealmOrUpdate(Arrays.asList(event.getPositions()));
@@ -104,6 +105,7 @@ public class MapPresenterImpl implements MapPresenter {
                         return Observable.just(event);
                     }
                 })
+                */
                 .doOnNext(event -> view.showEvent(event))
                 //.retry()
                 .subscribe();

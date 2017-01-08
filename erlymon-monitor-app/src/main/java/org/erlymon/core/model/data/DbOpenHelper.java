@@ -38,6 +38,7 @@ public class DbOpenHelper extends SQLiteOpenHelper {
         db.execSQL(ServersTable.getCreateTableQuery());
         db.execSQL(UsersTable.getCreateTableQuery());
         db.execSQL(DevicesTable.getCreateTableQuery());
+        db.execSQL(PositionsTable.getCreateTableQuery());
     }
 
     @Override
