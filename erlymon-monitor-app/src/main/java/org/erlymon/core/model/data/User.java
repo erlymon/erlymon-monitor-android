@@ -27,17 +27,14 @@ import com.google.gson.annotations.Since;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
 @StorIOSQLiteType(table = UsersTable.TABLE)
-public class User extends RealmObject implements Parcelable {
+public class User implements Parcelable {
 
     @StorIOSQLiteColumn(name = UsersTable.COLUMN_ID, key = true)
-    @PrimaryKey
     @SerializedName("id")
     @Expose
     long id;

@@ -29,9 +29,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.jakewharton.rxbinding.view.RxView
 import com.tbruyelle.rxpermissions.RxPermissions
-import io.realm.Realm
-import io.realm.RealmChangeListener
-import io.realm.RealmResults
 
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.util.GeoPoint
@@ -44,11 +41,9 @@ import org.erlymon.core.model.data.Event
 import org.erlymon.core.model.data.Position
 import org.erlymon.core.presenter.MapPresenter
 import org.erlymon.core.presenter.MapPresenterImpl
-import org.erlymon.core.presenter.UsersListPresenterImpl
 import org.erlymon.core.view.MapView
 import org.erlymon.monitor.R
 import org.erlymon.monitor.view.map.marker.MarkerWithLabel
-import org.osmdroid.util.BoundingBoxE6
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay

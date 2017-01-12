@@ -33,8 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import io.realm.Realm;
-import io.realm.RealmResults;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;

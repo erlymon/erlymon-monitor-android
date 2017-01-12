@@ -29,16 +29,12 @@ import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 
 import java.util.Date;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
 /**
  * Created by Sergey Penkovsky <sergey.penkovsky@gmail.com> on 5/4/16.
  */
 @StorIOSQLiteType(table = DevicesTable.TABLE)
-public class Device extends RealmObject implements Parcelable {
+public class Device implements Parcelable {
     @StorIOSQLiteColumn(name = DevicesTable.COLUMN_ID, key = true)
-    @PrimaryKey
     Long id;
 
     @StorIOSQLiteColumn(name = DevicesTable.COLUMN_NAME)

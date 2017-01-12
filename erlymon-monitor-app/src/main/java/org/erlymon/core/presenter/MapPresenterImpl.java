@@ -24,12 +24,15 @@ import android.util.Log;
 
 import com.appunite.websocket.rx.object.messages.RxObjectEvent;
 import com.appunite.websocket.rx.object.messages.RxObjectEventMessage;
+import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
 
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
 import org.erlymon.core.model.api.util.MoreObservables;
 import org.erlymon.core.model.data.Device;
 import org.erlymon.core.model.data.Event;
+import org.erlymon.core.model.data.Position;
+import org.erlymon.core.model.data.StorageModule;
 import org.erlymon.core.view.MapView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +40,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import io.realm.Realm;
 import rx.Observable;
-import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 
@@ -55,7 +54,6 @@ public class MapPresenterImpl implements MapPresenter {
     private static final Logger logger = LoggerFactory.getLogger(MapPresenterImpl.class);
 
     private Model model;
-    private Realm realmdb;
 
     private MapView view;
     private Subscription subscription = Subscriptions.empty();
@@ -63,7 +61,6 @@ public class MapPresenterImpl implements MapPresenter {
     public MapPresenterImpl(Context context, MapView view) {
         this.view = view;
         this.model = new ModelImpl(context);
-        this.realmdb = Realm.getDefaultInstance();
     }
 
     @Override
@@ -87,25 +84,52 @@ public class MapPresenterImpl implements MapPresenter {
                         return Observable.timer(1, TimeUnit.SECONDS);
                     }
                 }))
-                .observeOn(AndroidSchedulers.mainThread())
-                /*
-                .doOnNext(event -> realmdb.executeTransactionAsync(realm -> {
-                    if (event.getPositions() != null) {
-                        realm.copyToRealmOrUpdate(Arrays.asList(event.getPositions()));
-                    }
-                    if (event.getDevices() != null) {
-                        realm.copyToRealmOrUpdate(Arrays.asList(event.getDevices()));
-                    }
-                }))
-                .flatMap(event -> {
-                    if ((event.getDevices() == null || event.getDevices().length == 0) && event.getPositions() != null) {
-                        return realmdb.where(Device.class).findAllAsync().asObservable()
-                                .flatMap(devices -> Observable.just(new Event(devices.toArray(new Device[devices.size()]), event.getPositions())));
-                    } else {
+                .flatMap(new Func1<Event, Observable<Event>>() {
+                    @Override
+                    public Observable<Event> call(final Event event) {
+                        if (event.getDevices() != null && event.getPositions() != null) {
+                            Observable<PutResults<Device>> devicesObserver = StorageModule.getInstance().getStorage()
+                                    .put()
+                                    .objects(Arrays.asList(event.getDevices()))
+                                    .prepare()
+                                    .asRxObservable();
+
+                            Observable<PutResults<Position>> positionsObserver = StorageModule.getInstance().getStorage()
+                                    .put()
+                                    .objects(Arrays.asList(event.getPositions()))
+                                    .prepare()
+                                    .asRxObservable();
+
+                            return Observable.zip(
+                                    devicesObserver,
+                                    positionsObserver,
+                                    (devicePutResults, userPutResults) -> event
+                            );
+                        }
+
+                        if (event.getDevices() != null) {
+                            return StorageModule.getInstance().getStorage()
+                                    .put()
+                                    .objects(Arrays.asList(event.getDevices()))
+                                    .prepare()
+                                    .asRxObservable()
+                                    .map(devicePutResults -> event);
+                        }
+
+                        if (event.getPositions() != null) {
+                            return StorageModule.getInstance().getStorage()
+                                    .put()
+                                    .objects(Arrays.asList(event.getPositions()))
+                                    .prepare()
+                                    .asRxObservable()
+                                    .map(devicePutResults -> event);
+                        }
+
                         return Observable.just(event);
                     }
                 })
-                */
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(event -> view.showEvent(event))
                 //.retry()
                 .subscribe();
@@ -116,10 +140,6 @@ public class MapPresenterImpl implements MapPresenter {
         logger.debug("onStop");
         if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
-        }
-
-        if (!realmdb.isClosed()) {
-            realmdb.close();
         }
     }
 }

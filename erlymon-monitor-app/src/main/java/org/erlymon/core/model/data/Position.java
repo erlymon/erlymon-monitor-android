@@ -46,15 +46,15 @@ public class Position implements Parcelable {
     @Since(3.0)
     Long deviceId;
 
-    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_SERVER_TIME)
+    //@StorIOSQLiteColumn(name = PositionsTable.COLUMN_SERVER_TIME)
     @Since(3.0)
     Date serverTime;
 
-    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_DEVICE_TIME)
+    //@StorIOSQLiteColumn(name = PositionsTable.COLUMN_DEVICE_TIME)
     @Since(3.0)
     Date deviceTime;
 
-    @StorIOSQLiteColumn(name = PositionsTable.COLUMN_FIX_TIME)
+    //@StorIOSQLiteColumn(name = PositionsTable.COLUMN_FIX_TIME)
     @Since(3.0)
     Date fixTime;
 

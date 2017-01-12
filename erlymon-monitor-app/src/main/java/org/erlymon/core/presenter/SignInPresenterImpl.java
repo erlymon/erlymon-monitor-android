@@ -39,14 +39,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
-import io.realm.Realm;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.Subscriptions;
 

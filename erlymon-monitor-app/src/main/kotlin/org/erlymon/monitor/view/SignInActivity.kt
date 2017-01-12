@@ -20,17 +20,13 @@ package org.erlymon.monitor.view
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
 import android.support.v7.widget.PopupMenu
 import com.jakewharton.rxbinding.view.RxView
 import com.tbruyelle.rxpermissions.RxPermissions
-import io.realm.Realm
 
 import org.slf4j.LoggerFactory
 
-import kotlinx.android.synthetic.main.activity_signin.*
 import kotlinx.android.synthetic.main.content_signin.*
 import org.erlymon.core.model.api.ApiModule
 import org.erlymon.core.model.data.Server
@@ -97,7 +93,6 @@ class SignInActivity : BaseActivity<SignInPresenter>(), SignInView, SettingsDial
     }
 
     override fun onChangeServerConfig(dns: String, sslOrTls: Boolean, protocolVersion: Double) {
-        Realm.getDefaultInstance().executeTransaction { realm -> realm.deleteAll() }
         MainPref.dns = dns
         MainPref.sslOrTls = sslOrTls
         MainPref.protocolVersion = protocolVersion.toFloat()

@@ -133,7 +133,7 @@ public class PositionsTable {
                 + COLUMN_ID + " INTEGER NOT NULL PRIMARY KEY, "
                 + COLUMN_PROTOCOL + " STRING NOT NULL, "
                 + COLUMN_DEVICE_ID + " INTEGER NOT NULL, "
-                + COLUMN_SERVER_TIME + " STRING DEFAULT NULL, "
+                + COLUMN_SERVER_TIME + " INTEGER DEFAULT NULL, "
                 + COLUMN_DEVICE_TIME + " INTEGER DEFAULT NULL, "
                 + COLUMN_FIX_TIME + " INTEGER DEFAULT NULL, "
                 + COLUMN_VALID + " INTEGER DEFAULT NULL, "
@@ -149,9 +149,9 @@ public class PositionsTable {
 
     public static class PositionSQLiteTypeMapping extends SQLiteTypeMapping<Position> {
         public PositionSQLiteTypeMapping() {
-            super(new PositionsTable.PositionStorIOSQLitePutResolver(),
-                    new PositionsTable.PositionStorIOSQLiteGetResolver(),
-                    new PositionsTable.PositionStorIOSQLiteDeleteResolver());
+            super(new PositionStorIOSQLitePutResolver(),
+                    new PositionStorIOSQLiteGetResolver(),
+                    new PositionStorIOSQLiteDeleteResolver());
         }
     }
 
@@ -191,9 +191,9 @@ public class PositionsTable {
             contentValues.put("_id", object.id);
             contentValues.put("protocol", object.protocol);
             contentValues.put("device_id", object.deviceId);
-            contentValues.put("server_time", object.serverTime.getTime());
-            contentValues.put("device_time", object.deviceTime.getTime());
-            contentValues.put("fix_time", object.fixTime.getTime());
+            contentValues.put("server_time", object.serverTime == null ? null : object.serverTime.getTime());
+            contentValues.put("device_time", object.deviceTime == null ? null : object.deviceTime.getTime());
+            contentValues.put("fix_time", object.fixTime == null ? null : object.fixTime.getTime());
             contentValues.put("outdated", object.outdated);
             contentValues.put("valid", object.valid);
             contentValues.put("latitude", object.latitude);

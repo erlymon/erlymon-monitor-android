@@ -22,8 +22,6 @@ package org.erlymon.core.presenter;
 import android.content.Context;
 import android.util.Log;
 
-import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
-
 import org.erlymon.core.model.Model;
 import org.erlymon.core.model.ModelImpl;
 import org.erlymon.core.model.data.Device;
@@ -32,7 +30,6 @@ import org.erlymon.core.view.DeviceView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.realm.Realm;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
