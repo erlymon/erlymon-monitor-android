@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
+import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
@@ -71,7 +72,6 @@ public class MapPresenterImpl implements MapPresenter {
         }
 
         subscription = model.openWebSocket()
-                .subscribeOn(Schedulers.io())
                 .doOnNext(rxObjectEvent -> logger.error("DUMP RxObjectEvent => " + rxObjectEvent))
                 .compose(MoreObservables.filterAndMap(RxObjectEventMessage.class))
                 .doOnNext(rxObjectEventMessage -> logger.error("DUMP RxObjectEventMessage => " + rxObjectEventMessage))
@@ -130,9 +130,24 @@ public class MapPresenterImpl implements MapPresenter {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(event -> view.showEvent(event))
+                //.doOnNext(event -> view.showEvent(event))
                 //.retry()
-                .subscribe();
+                .subscribe(new Observer<Event>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        view.showError(e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(Event event) {
+                        view.showEvent(event);
+                    }
+                });
     }
 
     @Override
