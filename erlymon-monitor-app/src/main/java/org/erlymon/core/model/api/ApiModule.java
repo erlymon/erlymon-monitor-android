@@ -77,7 +77,7 @@ public class ApiModule {
         gson = new GsonBuilder()
                 //.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 .registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
-                    final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
+                    final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH);
                     @Override
                     public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
                         try {
