@@ -34,7 +34,8 @@
     </string-array>
 
 
-    <string-array name="mapTypeKey" translatable="false">
+    <string-array name="mapType" translatable="false">
+        <item>unknown</item>
         <item>osm</item>
         <item>bingRoad</item>
         <item>bingAerial</item>
@@ -42,10 +43,35 @@
     </string-array>
 
     <string-array name="mapTypeName">
+        <item>@string/mapLayer</item>
         <item>@string/mapOsm</item>
         <item>@string/mapBingRoad</item>
         <item>@string/mapBingAerial</item>
         <item>@string/mapCustom</item>
+    </string-array>
+
+    <string-array name="distanceUnit" translatable="false">
+        <item>unknown</item>
+        <item>km</item>
+        <item>mi</item>
+    </string-array>
+
+    <string-array name="distanceUnitName">
+        <item>@string/settingsDistanceUnit</item>
+        <item>@string/sharedKm</item>
+        <item>@string/sharedMi</item>
+    </string-array>
+
+    <string-array name="speedUnit" translatable="false">
+        <item>unknown</item>
+        <item>kmh</item>
+        <item>mph</item>
+    </string-array>
+
+    <string-array name="speedUnitName">
+        <item>@string/settingsSpeedUnit</item>
+        <item>@string/sharedKmh</item>
+        <item>@string/sharedMph</item>
     </string-array>
 
     <string-array name="protocol_version" translatable="false">

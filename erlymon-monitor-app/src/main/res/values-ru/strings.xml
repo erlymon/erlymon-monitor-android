@@ -75,7 +75,7 @@
     <string name="userEmail">Email</string>
     <string name="errorPermissionRationale">Contacts permissions are needed for providing email completions.</string>
     <string name="positionsTitle">Позиции</string>
-    <string name="configServerDns">DNS or IP:PORT</string>
+    <string name="configServerDns">DNS или IP:PORT</string>
     <string name="commandFrequency">Частота</string>
     <string name="sharedCommandResult">The command completed successfully</string>
     <string name="sharedSendCommand">Отправить команду</string>
@@ -110,4 +110,13 @@
     <string name="userTitle">Пользователь</string>
     <string name="errorPermissionWriteStorage">Доступ на запись к внутренней памяти необходим для кеширования карт.</string>
     <string name="errorPermissionCoarseLocation">Доступ к местоположению необходим для отображение авшего местоположения на карте.</string>
+    <string name="configServerSecure">Включить Tls/Ssl</string>
+    <string name="sharedDateTimeFrom">С</string>
+    <string name="sharedDateTimeInterval">Время</string>
+    <string name="sharedDateTimeTo">По</string>
+    <string name="sharedKm">км</string>
+    <string name="sharedKmh">км/ч</string>
+    <string name="sharedMi">мили</string>
+    <string name="sharedMph">мили/ч</string>
+    <string name="sharedRemember">Запомнить</string>
 </resources>

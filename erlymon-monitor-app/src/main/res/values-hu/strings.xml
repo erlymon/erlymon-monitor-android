@@ -128,4 +128,13 @@
     <string name="userTitle">User</string>
     <string name="errorPermissionWriteStorage">Write sotrage permissions are needed for show map.</string>
     <string name="errorPermissionCoarseLocation">Coarse location permissions are needed for show your location.</string>
+    <string name="configServerSecure">Used Tls or Ssl</string>
+    <string name="sharedDateTimeFrom">From</string>
+    <string name="sharedDateTimeInterval">Date interval</string>
+    <string name="sharedDateTimeTo">To</string>
+    <string name="sharedKm">km</string>
+    <string name="sharedKmh">km/h</string>
+    <string name="sharedMi">mi</string>
+    <string name="sharedMph">mph</string>
+    <string name="sharedRemember">Remember</string>
 </resources>

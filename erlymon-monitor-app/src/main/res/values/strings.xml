@@ -56,6 +56,10 @@
     <string name="sharedLoading">Loading</string>
     <string name="sharedWait">Wait…</string>
     <string name="sharedRemoveConfirm">Remove item?</string>
+    <string name="sharedKm">km</string>
+    <string name="sharedMi">mi</string>
+    <string name="sharedKmh">km/h</string>
+    <string name="sharedMph">mph</string>
     <string name="serverConfigsListTitle">Servers List</string>
     <string name="serverConfigTitle">Server</string>
     <string name="serverConfigUseNewProtocol">Use a new protocol</string>
@@ -101,7 +105,7 @@
     <string name="errorSendCommand">The command is not executed</string>
     <string name="sharedCommandResult">The command completed successfully</string>
     <string name="configServerDns">DNS or IP:PORT</string>
-    <string name="configServerSecure" translatable="false">Used Tls or Ssl</string>
+    <string name="configServerSecure">Used Tls or Ssl</string>
     <string name="userAdmin">Administrator</string>
     <string name="mapLayer">Map layer</string>
     <string name="settingsUsers">Users</string>
@@ -124,4 +128,10 @@
     <string name="aboutWeb">For more information visit\nwww.erlymon.org/apps</string>
     <string name="aboutTitle">About</string>
     <string name="userTitle">User</string>
+    <string name="sharedDateTimeInterval">Date interval</string>
+    <string name="sharedDateTimeFrom">From</string>
+    <string name="sharedDateTimeTo">To</string>
+    <string name="sharedDateFormat" translatable="false">yyyy-mm-dd</string>
+    <string name="sharedTimeFormat" translatable="false">hh:mm</string>
+    <string name="sharedRemember">Remember</string>
 </resources>
